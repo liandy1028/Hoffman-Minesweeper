@@ -9,6 +9,7 @@ import time
 UNKNOWN = -1
 FLAG = -2
 EMPTY = -3
+UNCOVERED = -4
 ROWS = 0
 COLS = 0
 
@@ -31,43 +32,41 @@ def play_game():
     else:
         go = True
 
+    update = True
     while go:
-        win = google_interface.update_board()
+        if update:
+            win = google_interface.update_board()
         if win:
             break
 
         if t + 300 < time.time():
             break
-        
-        generate_board(board)
+
+        if update:
+            generate_board(board)
+
         reset_moves(moves)
         for x in range(ROWS):
             for y in range(COLS):
                 calculate(x, y, board, moves)
-        
-        # if check_moves(moves):
-        #     for x in range(ROWS):
-        #         for y in range(COLS):
-        #             if moves[x][y] == M_MINE:
-        #                 google_interface.mine(x, y)
-        #             elif moves[x][y] == M_FLAG:
-        #                 google_interface.flag(x, y)
 
-        if True:
-            facts = {}
-            make_facts(board, facts)
+        facts = {}
+        make_facts(board, facts)
+        for x in range(ROWS):
+            for y in range(COLS):
+                calculate_facts(x, y, board, moves, facts)
+
+        if check_moves(moves):
+            update_current_board(board, moves)
+            update = False
             for x in range(ROWS):
                 for y in range(COLS):
-                    calculate_facts(x, y, board, moves, facts)
-
-            if check_moves(moves):
-                for x in range(ROWS):
-                    for y in range(COLS):
-                        if moves[x][y] == M_MINE:
-                            google_interface.mine(x, y)
-                        elif moves[x][y] == M_FLAG:
-                            google_interface.flag(x, y)
-            else:
+                    if moves[x][y] == M_MINE:
+                        google_interface.mine(x, y)
+                    elif moves[x][y] == M_FLAG:
+                        google_interface.flag(x, y)
+        else:
+            if update:
                 guesses += 1
 
                 if len(facts):
@@ -89,6 +88,8 @@ def play_game():
                                 break
                         if brk:
                             break
+            else:
+                update = True
 
 
 
@@ -97,9 +98,24 @@ def play_game():
     # print('Guesses: ' + str(guesses))
     return win
 
+def update_current_board(board, moves):
+    for x in range(ROWS):
+        for y in range(COLS):
+            if moves[x][y] == M_FLAG:
+                board[x][y] = FLAG
+                for dx in (-1,0,1):
+                    if 0 <= x + dx < ROWS:
+                        for dy in (-1,0,1):
+                            if 0 <= y + dy < COLS:
+                                if board[x + dx][y + dy] in range(9):
+                                    board[x + dx][y + dy] -= 1
+            elif moves[x][y] == M_MINE:
+                board[x][y] = UNCOVERED
+    # display(board)
+
         
 def calculate(x, y, board, moves):
-    if board[x][y] == UNKNOWN or board[x][y] == FLAG or board[x][y] == EMPTY:
+    if board[x][y] == UNKNOWN or board[x][y] == FLAG or board[x][y] == EMPTY or board[x][y] == UNCOVERED:
         return 0
     elif board[x][y] == 0:
         for dx in (-1,0,1):
@@ -125,7 +141,7 @@ def calculate(x, y, board, moves):
                                 moves[x + dx][y + dy] = M_FLAG
 
 def calculate_facts(x, y, board, moves, facts):
-    if board[x][y] == UNKNOWN or board[x][y] == FLAG or board[x][y] == EMPTY:
+    if board[x][y] == UNKNOWN or board[x][y] == FLAG or board[x][y] == EMPTY or board[x][y] == UNCOVERED:
         return 0
     else:
         affected_squares = []
@@ -217,6 +233,10 @@ def display(board):
                 print('^', end=' ')
             elif col == EMPTY:
                 print(' ', end=' ')
+            elif col == UNCOVERED:
+                print('^', end=' ')
+            elif col == 0:
+                print('.', end=' ')
             else:
                 print(col, end=' ')
         print()

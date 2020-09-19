@@ -9,7 +9,6 @@ import time
 UNKNOWN = -1
 FLAG = -2
 EMPTY = -3
-UNCOVERED = -4
 ROWS = 0
 COLS = 0
 
@@ -32,41 +31,43 @@ def play_game():
     else:
         go = True
 
-    update = True
     while go:
-        if update:
-            win = google_interface.update_board()
+        win = google_interface.update_board()
         if win:
             break
 
         if t + 300 < time.time():
             break
-
-        if update:
-            generate_board(board)
-
+        
+        generate_board(board)
         reset_moves(moves)
         for x in range(ROWS):
             for y in range(COLS):
                 calculate(x, y, board, moves)
+        
+        # if check_moves(moves):
+        #     for x in range(ROWS):
+        #         for y in range(COLS):
+        #             if moves[x][y] == M_MINE:
+        #                 google_interface.mine(x, y)
+        #             elif moves[x][y] == M_FLAG:
+        #                 google_interface.flag(x, y)
 
-        facts = {}
-        make_facts(board, facts)
-        for x in range(ROWS):
-            for y in range(COLS):
-                calculate_facts(x, y, board, moves, facts)
-
-        if check_moves(moves):
-            update_current_board(board, moves)
-            update = False
+        if True:
+            facts = {}
+            make_facts(board, facts)
             for x in range(ROWS):
                 for y in range(COLS):
-                    if moves[x][y] == M_MINE:
-                        google_interface.mine(x, y)
-                    elif moves[x][y] == M_FLAG:
-                        google_interface.flag(x, y)
-        else:
-            if update:
+                    calculate_facts(x, y, board, moves, facts)
+
+            if check_moves(moves):
+                for x in range(ROWS):
+                    for y in range(COLS):
+                        if moves[x][y] == M_MINE:
+                            google_interface.mine(x, y)
+                        elif moves[x][y] == M_FLAG:
+                            google_interface.flag(x, y)
+            else:
                 guesses += 1
 
                 if len(facts):
@@ -88,8 +89,6 @@ def play_game():
                                 break
                         if brk:
                             break
-            else:
-                update = True
 
 
 
@@ -98,23 +97,9 @@ def play_game():
     # print('Guesses: ' + str(guesses))
     return win
 
-def update_current_board(board, moves):
-    for x in range(ROWS):
-        for y in range(COLS):
-            if moves[x][y] == M_FLAG:
-                board[x][y] = FLAG
-                for dx in (-1,0,1):
-                    if 0 <= x + dx < ROWS:
-                        for dy in (-1,0,1):
-                            if 0 <= y + dy < COLS:
-                                if board[x + dx][y + dy] in range(9):
-                                    board[x + dx][y + dy] -= 1
-            elif moves[x][y] == M_MINE:
-                board[x][y] = UNCOVERED
-
         
 def calculate(x, y, board, moves):
-    if board[x][y] == UNKNOWN or board[x][y] == FLAG or board[x][y] == EMPTY or board[x][y] == UNCOVERED:
+    if board[x][y] == UNKNOWN or board[x][y] == FLAG or board[x][y] == EMPTY:
         return 0
     elif board[x][y] == 0:
         for dx in (-1,0,1):

@@ -77,7 +77,7 @@ def find_board_size(bbox):
     img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
 
     _, img = cv2.threshold(img, 180, 255, cv2.THRESH_BINARY)
-    cv2.imwrite('python/board.png', img)
+    # cv2.imwrite('python/board.png', img)
 
     test_row = int(bbox[3] / 2)
     old_pxl0 = img[test_row][0]
