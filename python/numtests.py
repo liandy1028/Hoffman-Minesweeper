@@ -41,16 +41,23 @@ def test_4(img):
     return True
 
 def test_5(img):
-    col = img[:,2]
-    if col[0]:
-        return False
-    change = 0
-    for pxl in col:
-        if bool(pxl) != change % 2:
-            change += 1
-    if change != 3:
-        return False
-    return True
+    # col = img[:,2]
+    # if col[0]:
+    #     return False
+    # change = 0
+    # for pxl in col:
+    #     if bool(pxl) != change % 2:
+    #         change += 1
+    # if change != 3:
+    #     return False
+    
+    for i in range(5):
+        if img[8 + i, 2]:
+            if all(img[8 + i, 0:5]):
+                return True
+    return False
+
+    # return True
 
 def test_6(img):
     # cv2.imwrite('python/images/6.png', img)
@@ -59,5 +66,5 @@ def test_6(img):
 def test_7(img):
     return False
 
-# for i in range(1,9):
-#     print(test_5(cv2.cvtColor(cv2.imread(f'python/images/14_15.png'), cv2.COLOR_BGR2GRAY)))
+
+# print(test_5(cv2.cvtColor(cv2.imread(f'python/images/6_2_6.png'), cv2.COLOR_BGR2GRAY)))

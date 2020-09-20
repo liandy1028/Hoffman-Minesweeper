@@ -68,6 +68,7 @@ def play_game():
         else:
             if update:
                 guesses += 1
+                print('Guessing...')
 
                 if len(facts):
                     squares = set()

@@ -70,20 +70,26 @@ def process_img(img, num=0):
             output = 'blank'
         elif img[0][0] == 0:
             if all([(70, 205, 160)[i] < orig[1][1][i] < (85, 220, 175)[i] for i in range(3)]):
-                for row in orig:
-                    for pxl in row:
-                        if all([abs(pxl[i] - (7, 54, 242)[i]) < 10 for i in range(3)]):
-                            output = 'flag'
-                if output:
-                    pass
+                # for row in orig:
+                #     for pxl in row:
+                        # if all([abs(pxl[i] - (7, 54, 242)[i]) < 10 for i in range(3)]):
+                        #     output = 'flag'
+                # if output:
+                #     pass
+                # else:
+                #     output = 'unknown'
+
+                if all([abs(orig[10][10][i] - (7, 54, 242)[i]) < 10 for i in range(3)]):
+                    output = 'flag'
                 else:
                     output = 'unknown'
+
             else:
                 output = 'bomb'
     else:
         output = identify_number(img)
         if output == 5 or output == 6:
-            # cv2.imwrite(f'python/images/{num}.png', img)
+            # cv2.imwrite(f'python/images/{output}_{num}.png', img)
             pass
 
     # cv2.imwrite(f'python/images/processed/{NUM}/{NUM}_{num + START}.png', img)

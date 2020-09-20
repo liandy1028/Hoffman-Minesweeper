@@ -8,7 +8,8 @@ from pynput import keyboard
 
 # sleep(3)
 
-DELAY = 0.9
+DELAY = 1
+pyautogui.PAUSE = 0
 
 
 display_board = []
