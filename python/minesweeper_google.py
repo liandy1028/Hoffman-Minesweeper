@@ -3,6 +3,12 @@ import numpy as np
 import random
 from time import sleep
 import time
+from pynput import keyboard
+
+
+
+google_interface.DELAY = 1.05
+
 
 
 # TILES
@@ -27,13 +33,13 @@ def play_game():
     board = np.zeros((ROWS, COLS), dtype=int)
     moves = np.zeros((ROWS, COLS), dtype=int)
 
-    if google_interface.mine(int(ROWS / 2), int(COLS / 2)):
-        go = False
-    else:
-        go = True
+    google_interface.mine(int(ROWS / 2), int(COLS / 2))
+
+    # for _ in range(5):
+    #     google_interface.mine(random.randrange(0,ROWS), random.randrange(0,COLS))
 
     update = True
-    while go:
+    while True:
         if update:
             win = google_interface.update_board()
         if win:
@@ -68,7 +74,7 @@ def play_game():
         else:
             if update:
                 guesses += 1
-                print('Guessing...')
+                print(f'Guessing... ({guesses})')
 
                 if len(facts):
                     squares = set()
@@ -91,10 +97,7 @@ def play_game():
                             break
             else:
                 update = True
-
-
-
-
+                
     # print(win) 
     # print('Guesses: ' + str(guesses))
     return win
@@ -243,8 +246,20 @@ def display(board):
         print()
     print()
 
+def on_press(key):
+    if key == keyboard.Key.esc:
+        return False
+    elif key == keyboard.KeyCode.from_char('.'):
+        google_interface.speed(True)
+    elif key == keyboard.KeyCode.from_char(','):
+        google_interface.speed(False)
+    elif key == keyboard.Key.ctrl_r:
+        play_game()
 
-play_game()
+# play_game()
+
+with keyboard.Listener(on_press=on_press) as kL:
+    kL.join()
 
 # wins = 0
 # losses = 0

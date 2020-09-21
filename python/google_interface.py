@@ -3,13 +3,12 @@ import pyautogui
 import numpy as np
 from time import sleep
 import digit_recognition
-
 from pynput import keyboard
 
 # sleep(3)
 
 DELAY = 1
-pyautogui.PAUSE = 0
+# pyautogui.PAUSE = 0
 
 
 display_board = []
@@ -153,6 +152,12 @@ def display(board):
                 print(col, end=' ')
         print()
     print()
+
+def speed(fast):
+    if fast:
+        pyautogui.PAUSE = 0
+    else:
+        pyautogui.PAUSE = 0.1
 
 # def on_press(key):
 #     if key == keyboard.Key.esc:
