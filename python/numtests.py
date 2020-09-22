@@ -25,6 +25,8 @@ def test_3(img):
         return False
     elif img[1,6]:
         return False
+    elif not img[9,2]:
+        return False
     elif img[9,6]:
         return False
     elif not img[-1,-1]:

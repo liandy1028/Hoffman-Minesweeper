@@ -88,7 +88,7 @@ def process_img(img, num=0):
                 output = 'bomb'
     else:
         output = identify_number(img)
-        if output == 5 or output == 6:
+        if output == 4 or output == 3:
             # cv2.imwrite(f'python/images/{output}_{num}.png', img)
             pass
 

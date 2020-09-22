@@ -7,7 +7,7 @@ from pynput import keyboard
 
 
 
-google_interface.DELAY = 1.05
+google_interface.DELAY = 1.1
 
 
 
@@ -24,6 +24,7 @@ M_MINE = 1
 M_FLAG = 2
 
 def play_game():
+    sleep(0.1)
     guesses = 0
     t = time.time()
 
@@ -32,6 +33,7 @@ def play_game():
     ROWS, COLS = google_interface.find_board_size(bbox)
     board = np.zeros((ROWS, COLS), dtype=int)
     moves = np.zeros((ROWS, COLS), dtype=int)
+    fin_moves = np.zeros((ROWS, COLS), dtype=int)
 
     google_interface.mine(int(ROWS / 2), int(COLS / 2))
 
@@ -67,10 +69,9 @@ def play_game():
             update = False
             for x in range(ROWS):
                 for y in range(COLS):
-                    if moves[x][y] == M_MINE:
-                        google_interface.mine(x, y)
-                    elif moves[x][y] == M_FLAG:
-                        google_interface.flag(x, y)
+                    if moves[x][y]:
+                        fin_moves[x][y] = moves[x][y]
+           
         else:
             if update:
                 guesses += 1
@@ -97,6 +98,16 @@ def play_game():
                             break
             else:
                 update = True
+                for x in range(ROWS):
+                    for y in range(COLS):
+                        if fin_moves[x][y] == M_FLAG:
+                            google_interface.flag(x, y)
+                for x in range(ROWS):
+                    for y in range(COLS):
+                        if fin_moves[x][y] == M_MINE:
+                            google_interface.mine(x, y)
+                reset_moves(fin_moves)
+
                 
     # print(win) 
     # print('Guesses: ' + str(guesses))

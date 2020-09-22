@@ -29,7 +29,8 @@ HEIGHT = 0
 WIDTH = 0
 
 def mine(x, y):
-    pyautogui.click((y + 0.5) * BBOX[2] / WIDTH + BBOX[0], (x + 0.5) * BBOX[3] / HEIGHT + BBOX[1])
+    pyautogui.click((y + 0.5) * BBOX[2] / WIDTH + BBOX[0], (x + 0.5) * BBOX[3] / HEIGHT + BBOX[1], button='left')
+    pyautogui.click(button='middle')
     # sleep(DELAY)
 
 def flag(x, y):
