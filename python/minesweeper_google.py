@@ -191,6 +191,15 @@ def calculate_facts(x, y, board, moves, facts):
                     elif board[x][y] == val:
                         for square in more_squares:
                             moves[square[0]][square[1]] = M_MINE
+            if val == 1 and board[x][y] > 1:
+                if any([square in affected_squares for square in key]):
+                    more_squares = []
+                    for square in affected_squares:
+                        if square not in key:
+                            more_squares.append(square)
+                    if len(more_squares) == board[x][y] - 1:
+                        for square in more_squares:
+                            moves[square[0]][square[1]] = M_FLAG
 
 def check_moves(moves):
     for x in range(ROWS):
