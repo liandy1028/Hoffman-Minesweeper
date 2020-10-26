@@ -1,8 +1,8 @@
 #include <iostream>
-
+using namespace std;
 // this is a test file
 int main()
 {
-    std::cout << "Hello World!" << std::endl;
+    cout << "Hello World!" << std::endl;
     return 0;
 }
