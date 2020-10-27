@@ -204,6 +204,8 @@ void generate_board(int x, int y)
 
 void display(int *board, int x, int y)
 {
+    std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+    
     std::cout << '|';
     for (int i = 0; i < COLS; i++)
     {
