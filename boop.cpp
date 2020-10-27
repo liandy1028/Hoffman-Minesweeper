@@ -2,6 +2,7 @@
 #include <random>
 #include <string>
 #include <time.h>
+#include <conio.h>
 
 bool FIRST_MOVE;
 int ROWS;
@@ -21,6 +22,7 @@ void generate_board(int x, int y);
 void display(int *board, int x, int y);
 char display_map(int x);
 void make_move(int &x, int &y);
+void make_move_unbuffered(int &x, int &y);
 bool mine(int x, int y);
 bool flag(int x, int y);
 bool calculate_win();
@@ -38,7 +40,7 @@ int main()
         display(display_board, x, y);
         while (FIRST_MOVE || !calculate_win())
         {
-            make_move(x, y);
+            make_move_unbuffered(x, y);
             display(display_board, x, y);
         }
         std::cout << "Play again? (y/n): ";
@@ -340,6 +342,79 @@ void make_move(int &x, int &y)
     }
 }
 
+void make_move_unbuffered(int &x, int &y)
+{
+    bool made_move = false;
+    while (!made_move)
+    {
+        char move = getch();
+        made_move = true;
+        switch (move)
+        {
+            case 'w':
+                if (x > 0)
+                {
+                    x -= 1;
+                }
+                else
+                {
+                    std::cout << "Cannot move up" << std::endl;
+                    made_move = false;
+                }
+                break;
+            case 'a':
+                if (y > 0)
+                {
+                    y -= 1;
+                }
+                else
+                {
+                    std::cout << "Cannot move left." << std::endl;;
+                    made_move = false;
+                }
+                break;
+            case 's':
+                if (x < ROWS - 1)
+                {
+                    x += 1;
+                }
+                else
+                {
+                    std::cout << "Cannot move down." << std::endl;
+                    made_move = false;
+                }
+                break;
+            case 'd':
+                if (y < COLS - 1)
+                {
+                    y += 1;
+                }
+                else
+                {
+                    std::cout << "Cannot move right." << std::endl;
+                    made_move = false;
+                }
+                break;
+            case 'm':
+                if (mine(x, y))
+                {
+                    std::cout << "Cannot mine this square." << std::endl;
+                    made_move = false;
+                }
+                break;
+            case 'f':
+                if (flag(x,y))
+                {
+                    std::cout << "Cannot flag this square." << std::endl;
+                    made_move = false;
+                }
+                break;
+            default:
+                made_move = false;
+        }
+    }
+}
+
 bool mine(int x, int y)
 {
     if (FIRST_MOVE)
@@ -387,7 +462,7 @@ bool flag(int x, int y)
     }
     if (display_board[index(x, y)] == 10)
     {
-        display_board[index(x, y)] == 0;
+        display_board[index(x, y)] = 0;
         return false;
     }
     return true;
