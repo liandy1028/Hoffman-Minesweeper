@@ -3,6 +3,7 @@
 #include <string>
 #include <time.h>
 #include <conio.h>
+#include <windows.h>
 
 bool FIRST_MOVE;
 int ROWS;
@@ -12,6 +13,7 @@ int *mines_board = NULL;
 int *nums_board = NULL;
 int *display_board = NULL;
 
+void setup_terminal();
 char get_char_input(std::string prompt);
 int index(int row, int col);
 int unindexX(int i);
@@ -21,6 +23,7 @@ void create_board();
 void generate_board(int x, int y);
 void display(int *board, int x, int y);
 char display_map(int x);
+std::string display_map_with_colors(int x);
 void make_move(int &x, int &y);
 void make_move_unbuffered(int &x, int &y);
 bool mine(int x, int y);
@@ -30,6 +33,7 @@ bool calculate_win();
 // TODO run game
 int main()
 {
+    setup_terminal();
     bool playing = true;
     while (playing)
     {
@@ -63,6 +67,14 @@ int main()
             }
         }
     }
+}
+
+void setup_terminal()
+{
+    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode = 0;
+    GetConsoleMode(h, &mode);
+    SetConsoleMode(h, mode | 0x0004);
 }
 
 char get_char_input(std::string prompt)
@@ -220,14 +232,14 @@ void display(int *board, int x, int y)
         {
             if (x == i && y == j)
             {
-                std::cout << '(' << display_map(board[index(i, j)]) << ')';
+                std::cout << '(' << display_map_with_colors(board[index(i, j)]) << ')';
                 continue;
             }
             if (x != i || y + 1 != j)
             {
                 std::cout << ' ';
             }
-            std::cout << display_map(board[index(i, j)]);
+            std::cout << display_map_with_colors(board[index(i, j)]);
         }
         if (x != i || y + 1 != COLS)
         {
@@ -268,6 +280,39 @@ char display_map(int x)
         return '*';
     }
     return 'O';
+}
+
+std::string display_map_with_colors(int x)
+{
+    switch (x)
+    {
+        case 0:
+            return "\x1B[42m\x1B[30m.\033[0m";
+        case 1:
+            return "\x1B[34m1\033[0m";
+        case 2:
+            return "\x1B[32m2\033[0m";
+        case 3:
+            return "\x1B[31m3\033[0m";
+        case 4:
+            return "\x1B[36m4\033[0m";
+        case 5:
+            return "\x1B[33m5\033[0m";
+        case 6:
+            return "\x1B[35m6\033[0m";
+        case 7:
+            return "\x1B[36m7\033[0m";
+        case 8:
+            return "\x1B[30m8\033[0m";
+        case 9:
+            return " ";
+        case 10:
+            return "\x1B[41m\x1B[33m^\033[0m";
+        case -1:
+            return "\x1B[31m*\033[0m";
+        default:
+            return "\x1B[47mO\033[0m";
+    }
 }
 
 void make_move(int &x, int &y)
