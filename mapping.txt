@@ -1,0 +1,11 @@
+mine_board: 1 = mine
+            0 = no mine 
+
+nums_board: 0-8 = number of mines nearby
+            -1 = mine 
+
+display_board: 0 = not mined 
+               1-8 = the number to display 
+               9 = clear
+               10 = flagged
+               -1 = mine -- blow up :C 

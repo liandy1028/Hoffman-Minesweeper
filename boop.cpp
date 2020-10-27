@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <time.h>
 
 bool FIRST_MOVE;
 int ROWS;
@@ -12,25 +13,53 @@ int *display_board = NULL;
 
 char get_char_input(std::string prompt);
 int index(int row, int col);
+int unindexX(int i);
+int unindexY(int i);
 void choose_difficulty();
 void create_board();
+void generate_board(int x, int y);
 void display(int *board, int x, int y);
 char display_map(int x);
 void make_move(int &x, int &y);
 bool mine(int x, int y);
 bool flag(int x, int y);
+bool calculate_win();
 
 // TODO run game
 int main()
 {
-    choose_difficulty();
-    create_board();
-    int x = 0;
-    int y = 0;
-    for (int i = 0; i < 20; i++)
+    bool playing = true;
+    while (playing)
     {
+        choose_difficulty();
+        create_board();
+        int x = 0;
+        int y = 0;
         display(display_board, x, y);
-        make_move(x, y);
+        while (FIRST_MOVE || !calculate_win())
+        {
+            make_move(x, y);
+            display(display_board, x, y);
+        }
+        std::cout << "Play again? (y/n): ";
+        bool answered = false;
+        while (!answered)
+        {
+            char input = get_char_input("Invalid answer, please enter y or n: ");
+            if (input == 'y')
+            {
+                answered = true;
+            }
+            else if (input == 'n')
+            {
+                playing = false;
+                answered = true;
+            }
+            else
+            {
+                std::cout << "Invalid answer, please enter y or n: ";
+            }
+        }
     }
 }
 
@@ -52,6 +81,16 @@ char get_char_input(std::string prompt)
 int index(int row, int col)
 {
     return row * COLS + col;
+}
+
+int unindexX(int i)
+{
+    return i / COLS;
+}
+
+int unindexY(int i)
+{
+    return i - COLS * unindexX(i);
 }
 
 void choose_difficulty()
@@ -100,10 +139,79 @@ void create_board()
     FIRST_MOVE = true;
 }
 
+void generate_board(int x, int y)
+{
+    srand(time(0));
+    for (int i = 0; i < MINES; i++)
+    {
+        bool placed_mine = false;
+        while (!placed_mine)
+        {
+            int place = rand() % (ROWS * COLS);
+            bool valid_place = true;
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (place == index(x + dx, y + dy))
+                    {
+                        valid_place = false;
+                    }
+                }
+            }
+            if (valid_place)
+            {
+                if (mines_board[place] == 0)
+                {
+                    mines_board[place] = 1;
+                    placed_mine = true;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < ROWS * COLS; i++)
+    {
+        if (mines_board[i])
+        {
+            nums_board[i] = -1;
+            continue;
+        }
+        int x = unindexX(i);
+        int y = unindexY(i);
+        int count = 0;
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            if (x + dx >= 0 && x + dx < ROWS)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (y + dy >= 0 && y + dy < COLS)
+                    {
+                        if (mines_board[index(x + dx, y + dy)])
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+        }
+        nums_board[i] = count;
+    }
+}
+
 void display(int *board, int x, int y)
 {
+    std::cout << '|';
+    for (int i = 0; i < COLS; i++)
+    {
+        std::cout << "--";
+    }
+    std::cout << "-|";
+    std::cout << std::endl;
     for (int i = 0; i < ROWS; i++)
     {
+        std::cout << '|';
         for (int j = 0; j < COLS; j++)
         {
             if (x == i && y == j)
@@ -117,20 +225,43 @@ void display(int *board, int x, int y)
             }
             std::cout << display_map(board[index(i, j)]);
         }
+        if (x != i || y + 1 != COLS)
+        {
+            std::cout << ' ';
+        }
+        std::cout << '|';
         std::cout << std::endl;
     }
+    std::cout << '|';
+    for (int i = 0; i < COLS; i++)
+    {
+        std::cout << "--";
+    }
+    std::cout << "-|";
+    std::cout << std::endl;
 }
 
-// TODO finish mapping
 char display_map(int x)
 {
-    if (x > 0 && x < 9)
+    if (x >= 1 && x <= 8)
     {
         return '0' + x;
     }
     if (x == 0)
     {
         return '.';
+    }
+    if (x == 9)
+    {
+        return ' ';
+    }
+    if (x == 10)
+    {
+        return '^';
+    }
+    if (x == -1)
+    {
+        return '*';
     }
     return 'O';
 }
@@ -209,14 +340,79 @@ void make_move(int &x, int &y)
     }
 }
 
-// TODO work out first move
 bool mine(int x, int y)
 {
+    if (FIRST_MOVE)
+    {
+        generate_board(x, y);
+        FIRST_MOVE = false;
+    }
+    if (display_board[index(x, y)] == 0)
+    {
+        if (nums_board[index(x, y)] == 0)
+        {
+            display_board[index(x, y)] = 9;
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (x + dx >= 0 && x + dx < ROWS)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        if (y + dy >= 0 && y + dy < COLS)
+                        {
+                            if (display_board[index(x + dx, y + dy)] == 0)
+                            {
+                                mine(x + dx, y + dy);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            display_board[index(x, y)] = nums_board[index(x, y)];
+        }
+        return false;
+    }
     return true;
 }
 
-// TODO 
 bool flag(int x, int y)
 {
+    if (display_board[index(x, y)] == 0)
+    {
+        display_board[index(x, y)] = 10;
+        return false;
+    }
+    if (display_board[index(x, y)] == 10)
+    {
+        display_board[index(x, y)] == 0;
+        return false;
+    }
+    return true;
+}
+
+bool calculate_win()
+{
+    for (int i = 0; i < ROWS * COLS; i++)
+    {
+        if (display_board[i] == -1)
+        {
+            std::cout << "Kaboom!! You lose." << std::endl;
+            return true;
+        }
+    }
+    for (int i = 0; i < ROWS * COLS; i++)
+    {
+        if (!mines_board[i])
+        {
+            if (display_board[i] == 0 || display_board[i] == 10)
+            {
+                return false;
+            }
+        }
+    }
+    std::cout << "Congratuhelatiionsz!!! You win!" << std::endl;
     return true;
 }
