@@ -34,6 +34,7 @@ bool calculate_win();
 int main()
 {
     setup_terminal();
+    std::ios_base::sync_with_stdio(false);
     bool playing = true;
     while (playing)
     {
@@ -216,45 +217,47 @@ void generate_board(int x, int y)
 
 void display(int *board, int x, int y)
 {
-    std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+    std::string display_txt;
+    display_txt += "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
     
-    std::cout << '|';
+    display_txt += '|';
     for (int i = 0; i < COLS; i++)
     {
-        std::cout << "--";
+        display_txt += "--";
     }
-    std::cout << "-|";
-    std::cout << std::endl;
+    display_txt += "-|";
+    display_txt += '\n';
     for (int i = 0; i < ROWS; i++)
     {
-        std::cout << '|';
+        display_txt += '|';
         for (int j = 0; j < COLS; j++)
         {
             if (x == i && y == j)
             {
-                std::cout << '(' << display_map_with_colors(board[index(i, j)]) << ')';
+                display_txt += '(' + display_map_with_colors(board[index(i, j)]) + ')';
                 continue;
             }
             if (x != i || y + 1 != j)
             {
-                std::cout << ' ';
+                display_txt += ' ';
             }
-            std::cout << display_map_with_colors(board[index(i, j)]);
+            display_txt += display_map_with_colors(board[index(i, j)]);
         }
         if (x != i || y + 1 != COLS)
         {
-            std::cout << ' ';
+            display_txt += ' ';
         }
-        std::cout << '|';
-        std::cout << std::endl;
+        display_txt += '|';
+        display_txt += '\n';
     }
-    std::cout << '|';
+    display_txt += '|';
     for (int i = 0; i < COLS; i++)
     {
-        std::cout << "--";
+        display_txt += "--";
     }
-    std::cout << "-|";
-    std::cout << std::endl;
+    display_txt += "-|";
+    display_txt += '\n';
+    std::cout << display_txt;
 }
 
 char display_map(int x)
@@ -375,6 +378,7 @@ void make_move(int &x, int &y)
                     made_move = false;
                 }
                 break;
+            case 'k':
             case 'f':
                 if (flag(x,y))
                 {
@@ -449,6 +453,7 @@ void make_move_unbuffered(int &x, int &y)
                     made_move = false;
                 }
                 break;
+            case 'k':
             case 'f':
                 if (flag(x,y))
                 {
