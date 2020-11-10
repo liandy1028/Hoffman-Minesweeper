@@ -10,6 +10,7 @@ from pynput import keyboard
 DELAY = 1
 # pyautogui.PAUSE = 0
 
+BOARD_THRESH = 185
 
 display_board = []
 FLAG = -2
@@ -56,6 +57,7 @@ def update_board():
         for y in range(WIDTH):
             img = screenshot[int(x * t_height):int((x + 1) * t_height), int(y * t_width):int((y + 1) * t_width)]
             img = cv2.resize(img, (30,30))
+            # cv2.imwrite(f'python/im{x}_{y}.png', img)
             val = digit_recognition.process_img(img, f'{x}_{y}')
             if val in range(9):
                 display_board[x][y] = val
@@ -77,7 +79,7 @@ def find_board_size(bbox):
     img = pyautogui.screenshot(region=bbox)
     img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
 
-    _, img = cv2.threshold(img, 180, 255, cv2.THRESH_BINARY)
+    _, img = cv2.threshold(img, BOARD_THRESH, 255, cv2.THRESH_BINARY)
     # cv2.imwrite('python/board.png', img)
 
     test_row = int(bbox[3] / 2)

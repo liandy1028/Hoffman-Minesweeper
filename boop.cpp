@@ -9,19 +9,16 @@ bool FIRST_MOVE;
 int ROWS;
 int COLS;
 int MINES;
-int *mines_board = NULL;
-int *nums_board = NULL;
-int *display_board = NULL;
+int **mines_board = NULL;
+int **nums_board = NULL;
+int **display_board = NULL;
 
 void setup_terminal();
 char get_char_input(std::string prompt);
-int index(int row, int col);
-int unindexX(int i);
-int unindexY(int i);
 void choose_difficulty();
 void create_board();
 void generate_board(int x, int y);
-void display(int *board, int x, int y);
+void display(int **board, int x, int y);
 char display_map(int x);
 std::string display_map_with_colors(int x);
 void make_move(int &x, int &y);
@@ -29,6 +26,7 @@ void make_move_unbuffered(int &x, int &y);
 bool mine(int x, int y);
 bool flag(int x, int y);
 bool calculate_win();
+void reset_board();
 
 // TODO run game
 int main()
@@ -48,6 +46,7 @@ int main()
             make_move_unbuffered(x, y);
             display(display_board, x, y);
         }
+        reset_board();
         std::cout << "Play again? (y/n): ";
         bool answered = false;
         while (!answered)
@@ -93,21 +92,6 @@ char get_char_input(std::string prompt)
     }
 }
 
-int index(int row, int col)
-{
-    return row * COLS + col;
-}
-
-int unindexX(int i)
-{
-    return i / COLS;
-}
-
-int unindexY(int i)
-{
-    return i - COLS * unindexX(i);
-}
-
 void choose_difficulty()
 {
     bool gotten_input = false;
@@ -142,14 +126,20 @@ void choose_difficulty()
 
 void create_board()
 {
-    mines_board = new int[ROWS * COLS];
-    nums_board = new int[ROWS * COLS];
-    display_board = new int[ROWS * COLS];
-    for (int i = 0; i < ROWS * COLS; i++)
+    mines_board = new int*[ROWS];
+    nums_board = new int*[ROWS];
+    display_board = new int*[ROWS];
+    for (int i = 0; i < ROWS; i++)
     {
-        mines_board[i] = 0;
-        nums_board[i] = 0;
-        display_board[i] = 0;
+        mines_board[i] = new int[COLS];
+        nums_board[i] = new int[COLS];
+        display_board[i] = new int[COLS];
+        for (int j = 0; j < COLS; j++)
+        {
+            mines_board[i][j] = 0;
+            nums_board[i][j] = 0;
+            display_board[i][j] = 0;
+        }
     }
     FIRST_MOVE = true;
 }
@@ -162,60 +152,56 @@ void generate_board(int x, int y)
         bool placed_mine = false;
         while (!placed_mine)
         {
-            int place = rand() % (ROWS * COLS);
+            int mine_x = rand() % ROWS;
+            int mine_y = rand() % COLS;
             bool valid_place = true;
-            for (int dx = -1; dx <= 1; dx++)
+            if (abs(mine_x - x) <= 1 && abs(mine_y - y) <= 1)
             {
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    if (place == index(x + dx, y + dy))
-                    {
-                        valid_place = false;
-                    }
-                }
+                valid_place = false;
             }
             if (valid_place)
             {
-                if (mines_board[place] == 0)
+                if (mines_board[mine_x][mine_y] == 0)
                 {
-                    mines_board[place] = 1;
+                    mines_board[mine_x][mine_y] = 1;
                     placed_mine = true;
                 }
             }
         }
     }
 
-    for (int i = 0; i < ROWS * COLS; i++)
+    for (int i = 0; i < ROWS; i++)
     {
-        if (mines_board[i])
+        for (int j = 0; j < COLS; j++)
         {
-            nums_board[i] = -1;
-            continue;
-        }
-        int x = unindexX(i);
-        int y = unindexY(i);
-        int count = 0;
-        for (int dx = -1; dx <= 1; dx++)
-        {
-            if (x + dx >= 0 && x + dx < ROWS)
+            if (mines_board[i][j])
             {
-                for (int dy = -1; dy <= 1; dy++)
+                nums_board[i][j] = -1;
+                continue;
+            }
+            int count = 0;
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (i + dx >= 0 && i + dx < ROWS)
                 {
-                    if (y + dy >= 0 && y + dy < COLS)
+                    for (int dy = -1; dy <= 1; dy++)
                     {
-                        if (mines_board[index(x + dx, y + dy)])
+                        if (j + dy >= 0 && j + dy < COLS)
                         {
-                            count++;
+                            if (mines_board[i + dx][j + dy])
+                            {
+                                count++;
+                            }
                         }
                     }
                 }
             }
+            nums_board[i][j] = count;
         }
-        nums_board[i] = count;
     }
 }
 
-void display(int *board, int x, int y)
+void display(int **board, int x, int y)
 {
     std::string display_txt;
     display_txt += "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
@@ -234,14 +220,14 @@ void display(int *board, int x, int y)
         {
             if (x == i && y == j)
             {
-                display_txt += '(' + display_map_with_colors(board[index(i, j)]) + ')';
+                display_txt += '(' + display_map_with_colors(board[i][j]) + ')';
                 continue;
             }
             if (x != i || y + 1 != j)
             {
                 display_txt += ' ';
             }
-            display_txt += display_map_with_colors(board[index(i, j)]);
+            display_txt += display_map_with_colors(board[i][j]);
         }
         if (x != i || y + 1 != COLS)
         {
@@ -474,11 +460,11 @@ bool mine(int x, int y)
         generate_board(x, y);
         FIRST_MOVE = false;
     }
-    if (display_board[index(x, y)] == 0)
+    if (display_board[x][y] == 0)
     {
-        if (nums_board[index(x, y)] == 0)
+        if (nums_board[x][y] == 0)
         {
-            display_board[index(x, y)] = 9;
+            display_board[x][y] = 9;
             for (int dx = -1; dx <= 1; dx++)
             {
                 if (x + dx >= 0 && x + dx < ROWS)
@@ -487,7 +473,7 @@ bool mine(int x, int y)
                     {
                         if (y + dy >= 0 && y + dy < COLS)
                         {
-                            if (display_board[index(x + dx, y + dy)] == 0)
+                            if (display_board[x + dx][y + dy] == 0)
                             {
                                 mine(x + dx, y + dy);
                             }
@@ -498,7 +484,7 @@ bool mine(int x, int y)
         }
         else
         {
-            display_board[index(x, y)] = nums_board[index(x, y)];
+            display_board[x][y] = nums_board[x][y];
         }
         return false;
     }
@@ -507,14 +493,14 @@ bool mine(int x, int y)
 
 bool flag(int x, int y)
 {
-    if (display_board[index(x, y)] == 0)
+    if (display_board[x][y] == 0)
     {
-        display_board[index(x, y)] = 10;
+        display_board[x][y] = 10;
         return false;
     }
-    if (display_board[index(x, y)] == 10)
+    if (display_board[x][y] == 10)
     {
-        display_board[index(x, y)] = 0;
+        display_board[x][y] = 0;
         return false;
     }
     return true;
@@ -522,24 +508,46 @@ bool flag(int x, int y)
 
 bool calculate_win()
 {
-    for (int i = 0; i < ROWS * COLS; i++)
+    for (int i = 0; i < ROWS; i++)
     {
-        if (display_board[i] == -1)
+        for (int j = 0; j < COLS; j++)
         {
-            std::cout << "Kaboom!! You lose." << std::endl;
-            return true;
+            if (display_board[i][j] == -1)
+            {
+                std::cout << "Kaboom!! You lose." << std::endl;
+                return true;
+            }
         }
     }
-    for (int i = 0; i < ROWS * COLS; i++)
+    for (int i = 0; i < ROWS; i++)
     {
-        if (!mines_board[i])
-        {
-            if (display_board[i] == 0 || display_board[i] == 10)
+        for (int j = 0; j < COLS; j++)
+        { 
+            if (!mines_board[i][j])
             {
-                return false;
+                if (display_board[i][j] == 0 || display_board[i][j] == 10)
+                {
+                    return false;
+                }
             }
         }
     }
     std::cout << "Congratuhelatiionsz!!! You win!" << std::endl;
     return true;
+}
+
+void reset_board()
+{
+    for (int i = 0; i < ROWS; i++)
+    {
+        delete [] mines_board[i];
+        delete [] nums_board[i];
+        delete [] display_board[i];
+    }
+    delete [] mines_board;
+    mines_board = NULL;
+    delete [] nums_board;
+    nums_board = NULL;
+    delete [] display_board;
+    display_board = NULL;
 }

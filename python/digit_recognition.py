@@ -42,7 +42,8 @@ def crop_img(img):
 
 def process_img(img, num=0):
     orig = img
-    lowerb = np.array([150,180,210]) 
+    # Threshold for color between blank and unknown
+    lowerb = np.array([150,180,200]) 
     upperb = np.array([165,200,235])
     img = cv2.inRange(img, lowerb, upperb)
 
@@ -69,7 +70,8 @@ def process_img(img, num=0):
         if img[0][0] == 255:
             output = 'blank'
         elif img[0][0] == 0:
-            if all([(70, 205, 160)[i] < orig[1][1][i] < (85, 220, 175)[i] for i in range(3)]):
+            # Green range
+            if all([(70, 205, 160)[i] < orig[1][1][i] < (105, 220, 185)[i] for i in range(3)]):
                 # for row in orig:
                 #     for pxl in row:
                         # if all([abs(pxl[i] - (7, 54, 242)[i]) < 10 for i in range(3)]):
@@ -79,7 +81,8 @@ def process_img(img, num=0):
                 # else:
                 #     output = 'unknown'
 
-                if all([abs(orig[10][10][i] - (7, 54, 242)[i]) < 10 for i in range(3)]):
+                # Flag's red
+                if all([abs(orig[10][10][i] - (37, 74, 211)[i]) < 10 for i in range(3)]):
                     output = 'flag'
                 else:
                     output = 'unknown'
@@ -93,7 +96,7 @@ def process_img(img, num=0):
             pass
 
     # cv2.imwrite(f'python/images/processed/{NUM}/{NUM}_{num + START}.png', img)
-    # cv2.imshow('1', img)
+    # cv2.imshow(str(output), img)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
     return output
