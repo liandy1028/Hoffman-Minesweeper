@@ -460,6 +460,7 @@ bool mine(int x, int y)
 {
     if (FIRST_MOVE)
     {
+        PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
         generate_board(x, y);
         FIRST_MOVE = false;
     }
@@ -467,6 +468,7 @@ bool mine(int x, int y)
     {
         if (nums_board[x][y] == 0)
         {
+            PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
             display_board[x][y] = 9;
             for (int dx = -1; dx <= 1; dx++)
             {
@@ -478,6 +480,7 @@ bool mine(int x, int y)
                         {
                             if (display_board[x + dx][y + dy] == 0)
                             {
+                                PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
                                 mine(x + dx, y + dy);
                             }
                         }
@@ -487,6 +490,7 @@ bool mine(int x, int y)
         }
         else
         {
+            PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
             display_board[x][y] = nums_board[x][y];
         }
         return false;
@@ -498,11 +502,13 @@ bool flag(int x, int y)
 {
     if (display_board[x][y] == 0)
     {
+        PlaySound(L"flag.wav", NULL, SND_ASYNC);
         display_board[x][y] = 10;
         return false;
     }
     if (display_board[x][y] == 10)
     {
+        PlaySound(L"flag.wav", NULL, SND_ASYNC);
         display_board[x][y] = 0;
         return false;
     }
@@ -517,6 +523,7 @@ bool calculate_win()
         {
             if (display_board[i][j] == -1)
             {
+                PlaySound(L"losingsound.wav", NULL, SND_ASYNC);
                 std::cout << "Kaboom!! You lose." << std::endl;
                 return true;
             }
@@ -535,6 +542,7 @@ bool calculate_win()
             }
         }
     }
+    PlaySound(L"winningmusic.wav", NULL, SND_ASYNC);
     std::cout << "Congratuhelatiionsz!!! You win!" << std::endl;
     return true;
 }
