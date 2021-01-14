@@ -30,6 +30,8 @@ bool flag(int x, int y);
 bool calculate_win();
 void reset_board();
 void choose_difficultyUI();
+void update_board_info(sf::Event event);
+void play_againUI();
 
 // TODO run game
 int main()
@@ -44,10 +46,14 @@ int main()
         int x = 0;
         int y = 0;
         display(display_board, x, y);
-        while (FIRST_MOVE || !calculate_win())
+        sf::Event event;
+        while ((FIRST_MOVE || !calculate_win()) && window.isOpen())
         {
-            make_move_unbuffered(x, y);
-            display(display_board, x, y);
+            while (window.pollEvent(event))
+            {
+                update_board_info(event);
+            }
+            displayUI(display_board);
         }
         reset_board();
         std::cout << "Play again? (y/n): ";
@@ -643,7 +649,7 @@ void choose_difficultyUI()
                 }
                 else if (pos.y > 400 && pos.y <= 650)
                 {
-                    if (currButton != 2) 
+                    if (currButton != 2)
                     {
                         MediumButton.setFillColor(sf::Color::Yellow);
                         currButton = 2;
@@ -721,8 +727,19 @@ void choose_difficultyUI()
                 {
                     return choose_difficultyUI();
                 }
+                window.close();
                 return;
             }
         }
     }
+}
+
+void displayUI(int** board)
+{
+
+}
+
+void update_board_info(sf::Event event)
+{
+
 }
