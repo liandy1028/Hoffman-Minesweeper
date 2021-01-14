@@ -14,6 +14,11 @@ int** mines_board = NULL;
 int** nums_board = NULL;
 int** display_board = NULL;
 sf::RenderWindow window(sf::VideoMode(1000, 1000), "Minesweeper");
+sf::RenderWindow window2(sf::VideoMode(1000, 1000), "Minesweeper");
+
+int boardx = 0;
+int boardy = 0;
+int tileSize = 20;
 
 void setup_terminal();
 char get_char_input(std::string prompt);
@@ -30,8 +35,10 @@ bool flag(int x, int y);
 bool calculate_win();
 void reset_board();
 void choose_difficultyUI();
-void update_board_info(sf::Event event);
-void play_againUI();
+void update_board_info(sf::Event event, int x, int y);
+bool play_againUI();
+void draw_tile(int x, int y, int data);
+void displayUI(int** board);
 
 // TODO run game
 int main()
@@ -45,36 +52,20 @@ int main()
         create_board();
         int x = 0;
         int y = 0;
-        display(display_board, x, y);
+
+        displayUI(display_board);
         sf::Event event;
-        while ((FIRST_MOVE || !calculate_win()) && window.isOpen())
+        while ((FIRST_MOVE || !calculate_win()) && window2.isOpen())
         {
             while (window.pollEvent(event))
             {
-                update_board_info(event);
+                sf::Vector2i pos = sf::Mouse::getPosition(window);
+                update_board_info(event, pos.x, pos.y);
             }
             displayUI(display_board);
         }
         reset_board();
-        std::cout << "Play again? (y/n): ";
-        bool answered = false;
-        while (!answered)
-        {
-            char input = get_char_input("Invalid answer, please enter y or n: ");
-            if (input == 'y')
-            {
-                answered = true;
-            }
-            else if (input == 'n')
-            {
-                playing = false;
-                answered = true;
-            }
-            else
-            {
-                std::cout << "Invalid answer, please enter y or n: ";
-            }
-        }
+        playing = play_againUI();
     }
 }
 
@@ -734,12 +725,148 @@ void choose_difficultyUI()
     }
 }
 
+void draw_tile(int x, int y, int ch)
+{
+    sf::Font font;
+    font.loadFromFile("ArialCE.ttf");
+
+    int xPosition = x * tileSize + boardx;
+    int yPosition = y * tileSize + boardy;
+
+    sf::RectangleShape tile(sf::Vector2f(tileSize, tileSize));
+    tile.setOutlineColor(sf::Color::Green);
+    tile.setOutlineThickness(2);
+    tile.setPosition(xPosition, yPosition);
+    window2.draw(tile);
+
+    sf::Text num;
+    num.setFont(font);
+    num.setString("" + ch);
+    num.setFillColor(sf::Color::Black);
+    num.setPosition(xPosition, yPosition);
+    num.setCharacterSize(tileSize);
+    window2.draw(num);
+}
+
 void displayUI(int** board)
 {
+    for (int i = 0; i < COLS; i++)
+    {
+        for (int j = 0; j < ROWS; j++)
+        {
+            draw_tile(j, i, board[i][j]);
+        }
+    }
+    window2.display();
 
 }
 
-void update_board_info(sf::Event event)
-{
 
+void update_board_info(sf::Event event, int x, int y)
+{
+    int tilex = (x - boardx) / tileSize;
+    int tiley = (x - boardy) / tileSize;
+    if (event.type == sf::Event::Closed)
+    {
+        window2.close();
+    }
+    else if (event.type == sf::Event::MouseButtonPressed)
+    {
+        if (x >= boardx && x <= tilex <= COLS &&
+            y >= boardy && y <= tiley <= ROWS)
+        {
+            if (event.mouseButton.button == sf::Mouse::Left)
+            {
+                mine(tilex, tiley);
+            }
+            else if (event.mouseButton.button == sf::Mouse::Right)
+            {
+                flag(tilex, tiley);
+            }
+            
+        }
+    }
+    else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F)
+    {
+        if (x >= boardx && x <= tilex <= COLS &&
+            y >= boardy && y <= tiley <= ROWS)
+        {
+            flag(tilex, tiley);
+        }
+    }
+}
+
+//asks user to play again, creating 2 buttons; if yes, return true; if no, close window, return false
+bool play_againUI()
+{
+    sf::Font font;
+    font.loadFromFile("ArialCE.ttf");
+
+    sf::Text Prompt;
+    Prompt.setFont(font);
+    Prompt.setString("Play again?");
+    Prompt.setFillColor(sf::Color::White);
+    Prompt.setPosition(50, 200);
+    Prompt.setCharacterSize(50);
+    window.draw(Prompt);
+
+    sf::RectangleShape YesButton(sf::Vector2f(800.f, 250.f));
+    YesButton.setFillColor(sf::Color::Green);
+    YesButton.setPosition(50.f, 300.f);
+    window.draw(YesButton);
+
+    sf::Text YesText;
+    YesText.setFont(font);
+    YesText.setString("Yes");
+    YesText.setFillColor(sf::Color::Black);
+    YesText.setPosition(50, 300);
+    YesText.setCharacterSize(50);
+    window.draw(YesText);
+
+    sf::RectangleShape NoButton(sf::Vector2f(800.f, 250.f));
+    NoButton.setFillColor(sf::Color::Red);
+    NoButton.setPosition(50.f, 600.f);
+    window.draw(NoButton);
+
+    sf::Text NoText;
+    NoText.setFont(font);
+    NoText.setString("No");
+    NoText.setFillColor(sf::Color::Black);
+    NoText.setPosition(50, 600);
+    NoText.setCharacterSize(50);
+    window.draw(NoText);
+
+    window.display();
+
+    sf::Event event;
+
+    while (window.isOpen())
+    {
+        while (window.pollEvent(event))
+        {
+            //window closed
+            if (event.type == sf::Event::Closed)
+            {
+                window.close();
+                return false;
+            }
+            //left click pressed, test for position and button press
+            else if (event.type == sf::Event::MouseButtonPressed)
+            {
+                sf::Vector2i pos = sf::Mouse::getPosition(window);
+                //clicked yes
+                if (pos.y >= 400 && pos.y <= 650)
+                {
+                    window.clear();
+                    return true;
+                }
+                //clicked no
+                else if (pos.y >= 600 && pos.y <= 850)
+                {
+                    window.close();
+                    return false;
+                }
+            }
+        }
+    }
 }
