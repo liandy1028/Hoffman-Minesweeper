@@ -15,6 +15,7 @@ int** nums_board = NULL;
 int** display_board = NULL;
 
 bool game_running = true;
+bool game_won = false;
 
 sf::RenderWindow window(sf::VideoMode(1712, 963), "Minesweeper");
 sf::Color background(139, 190, 255);
@@ -200,8 +201,8 @@ bool mine(int x, int y)
 {
     if (FIRST_MOVE)
     {
-        generate_board(x, y);
         PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
+        generate_board(x, y);
         FIRST_MOVE = false;
     }
     if (display_board[x][y] == 0)
@@ -266,6 +267,7 @@ bool calculate_win()
                 PlaySound(L"losingsound.wav", NULL, SND_ASYNC);
                 std::cout << "Kaboom!! You lose." << std::endl;
                 game_running = false;
+                game_won = false;
                 return true;
             }
         }
@@ -286,6 +288,7 @@ bool calculate_win()
     PlaySound(L"winningmusic.wav", NULL, SND_ASYNC);
     std::cout << "Congratuhelatiionsz!!! You win!" << std::endl;
     game_running = false;
+    game_won = true;
     return true;
 }
 
@@ -367,7 +370,7 @@ void choose_difficultyUI()
                 window.close();
             else if (event.type == sf::Event::MouseMoved)
             {
-                if (pos.x < 530 || pos.x > 1130) 
+                if (pos.x < 530 || pos.x > 1130)
                 {
                     if (currButton != 0)
                     {
@@ -423,7 +426,7 @@ void choose_difficultyUI()
                 window.display();
             }
             else if (event.type == sf::Event::MouseButtonPressed)
-            {                
+            {
                 if (pos.x < 550 || pos.x > 1150)
                 {
                     return choose_difficultyUI();
@@ -521,7 +524,7 @@ void update_board_info(sf::Event event, int x, int y)
         {
             if (event.mouseButton.button == sf::Mouse::Left)
             {
-                std::cout << "mining" <<std::endl;
+                std::cout << "mining" << std::endl;
                 mine(tiley, tilex);
                 displayUI(display_board);
             }
@@ -532,7 +535,7 @@ void update_board_info(sf::Event event, int x, int y)
                 flag(tiley, tilex);
                 displayUI(display_board);
             }
-            
+
         }
     }
     else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F)
@@ -553,9 +556,21 @@ bool play_againUI()
     sf::Font font;
     font.loadFromFile("calibri.ttf");
 
+    sf::Text WinLoss;
+    WinLoss.setFont(font);
+    if (game_won)
+    {
+        text_Formatter(WinLoss, "You won!", sf::Color::White, 530, 2, 175);
+    }
+    else
+    {
+        text_Formatter(WinLoss, "You lost!", sf::Color::White, 530, 2, 175);
+    }
+    window.draw(WinLoss);
+
     sf::Text Prompt;
     Prompt.setFont(font);
-    text_Formatter(Prompt, "Play again?", sf::Color::White, 625, 100, 100);
+    text_Formatter(Prompt, "Play again?", sf::Color::White, 625, 170, 100);
     window.draw(Prompt);
 
     sf::RectangleShape YesButton(sf::Vector2f(800.f, 250.f));
@@ -623,7 +638,6 @@ bool play_againUI()
                         hovered = 1;
                     }
                 }
-                //clicked no
                 else if (pos.y >= 600 && pos.y <= 850 && pos.x > 450 && pos.x < 1250)
                 {
                     if (hovered != 2)
@@ -642,6 +656,7 @@ bool play_againUI()
                     }
                 }
                 window.clear(background);
+                window.draw(WinLoss);
                 window.draw(Prompt);
                 window.draw(YesButton);
                 window.draw(NoButton);
