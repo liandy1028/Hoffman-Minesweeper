@@ -23,11 +23,9 @@ sf::Color lightGreen(51, 255, 44);
 sf::Color lightRed(255, 67, 67);
 sf::Color lightYellow(224, 255, 65);
 
-
 int boardx = 50;
 int boardy = 50;
 int tileSize = 30;
-
 
 void create_board();
 void generate_board(int x, int y);
@@ -53,6 +51,7 @@ int main()
 {
     std::ios_base::sync_with_stdio(false);
     bool playing = true;
+    //main game loop
     while (playing)
     {
         window.setPosition(sf::Vector2i(0, 0));
@@ -74,13 +73,10 @@ int main()
         }
         reset_board();
         playing = play_againUI();
-
-
     }
 }
 
-
-
+//creates board with given amount of ROWS and COLS from choose_difficultyUI()
 void create_board()
 {
     mines_board = new int* [ROWS];
@@ -101,9 +97,11 @@ void create_board()
     FIRST_MOVE = true;
 }
 
+//places mine on board, assigns numbers to tiles based on how many mines in a 3x3 grid around it
 void generate_board(int x, int y)
 {
     srand(time(0));
+    //for loop to place mines
     for (int i = 0; i < MINES; i++)
     {
         bool placed_mine = false;
@@ -127,6 +125,7 @@ void generate_board(int x, int y)
         }
     }
 
+    //for loop to assign tile numbers
     for (int i = 0; i < ROWS; i++)
     {
         for (int j = 0; j < COLS; j++)
@@ -158,6 +157,7 @@ void generate_board(int x, int y)
     }
 }
 
+//returns which character to display for a given number on the display board
 char display_map(int x)
 {
     if (x >= 1 && x <= 8)
@@ -179,6 +179,7 @@ char display_map(int x)
     return 'O';
 }
 
+//returns which color to display for a given number on the display board
 sf::Color display_map_colored(int x)
 {
     if (x == 0)
@@ -197,6 +198,7 @@ sf::Color display_map_colored(int x)
     return sf::Color::White;
 }
 
+//reveals tile value, recursively mines around original tile to mine all tiles with no adjacent mines
 bool mine(int x, int y)
 {
     if (FIRST_MOVE)
@@ -219,6 +221,7 @@ bool mine(int x, int y)
                         {
                             if (display_board[x + dx][y + dy] == 0)
                             {
+                                //recursively mine around original tile
                                 mine(x + dx, y + dy);
                             }
                         }
@@ -228,6 +231,7 @@ bool mine(int x, int y)
         }
         else
         {
+            //reveal value of num
             display_board[x][y] = nums_board[x][y];
         }
         return false;
@@ -235,6 +239,7 @@ bool mine(int x, int y)
     return true;
 }
 
+//if tile does not have a flag, flags tile; if tile has a flag, unflags tile
 bool flag(int x, int y)
 {
     if (display_board[x][y] == 0)
@@ -252,6 +257,7 @@ bool flag(int x, int y)
     return true;
 }
 
+//determines whether the game has been lost, won, or should continue. returns true if the game should stop, returns false if the game should continue
 bool calculate_win()
 {
     for (int i = 0; i < ROWS; i++)
@@ -288,6 +294,7 @@ bool calculate_win()
     return true;
 }
 
+//deletes the 2D array pointers and clears the background
 void reset_board()
 {
     for (int i = 0; i < ROWS; i++)
@@ -307,6 +314,7 @@ void reset_board()
     window.clear(background);
 }
 
+//formats text
 void text_Formatter(sf::Text& text, std::string str, sf::Color color, float x, float y, int char_size)
 {
     text.setString(str);
@@ -315,6 +323,7 @@ void text_Formatter(sf::Text& text, std::string str, sf::Color color, float x, f
     text.setCharacterSize(char_size);
 }
 
+//displays buttons for difficulty (easy, medium, hard) and takes user input for which difficulty to select
 void choose_difficultyUI()
 {
     int currButton = 0;
@@ -364,6 +373,7 @@ void choose_difficultyUI()
 
             if (event.type == sf::Event::Closed)
                 window.close();
+            //highlight buttons when mouseover
             else if (event.type == sf::Event::MouseMoved)
             {
                 if (pos.x < 530 || pos.x > 1130)
@@ -421,6 +431,7 @@ void choose_difficultyUI()
                 window.draw(welcome);
                 window.display();
             }
+            //take input when buttons are pressed
             else if (event.type == sf::Event::MouseButtonPressed)
             {
                 if (pos.x < 550 || pos.x > 1150)
@@ -461,6 +472,7 @@ void choose_difficultyUI()
     }
 }
 
+//draws a tile at coordinates (x, y) using numcode for what should be displayed
 void draw_tile(int x, int y, int numCode)
 {
     sf::Font font;
@@ -489,6 +501,7 @@ void draw_tile(int x, int y, int numCode)
     window.draw(num);
 }
 
+//prints entire board, iterating thru tiles using draw_tile
 void displayUI(int** board)
 {
     window.clear(background);
@@ -500,10 +513,9 @@ void displayUI(int** board)
         }
     }
     window.display();
-
 }
 
-
+//mouse listener takes in user input to determine where user mined/flags 
 void update_board_info(sf::Event event, int x, int y)
 {
     int tilex = (x - boardx) / tileSize;
@@ -531,7 +543,6 @@ void update_board_info(sf::Event event, int x, int y)
                 flag(tiley, tilex);
                 displayUI(display_board);
             }
-
         }
     }
     else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F)
