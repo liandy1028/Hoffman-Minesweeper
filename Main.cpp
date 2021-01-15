@@ -13,12 +13,14 @@ int MINES;
 int** mines_board = NULL;
 int** nums_board = NULL;
 int** display_board = NULL;
-sf::RenderWindow window(sf::VideoMode(1000, 1000), "Minesweeper");
-sf::RenderWindow window2(sf::VideoMode(1000, 1000), "Minesweeper");
 
-int boardx = 0;
-int boardy = 0;
-int tileSize = 20;
+bool game_running = true;
+
+sf::RenderWindow window(sf::VideoMode(1980, 1080), "Minesweeper");
+
+int boardx = 50;
+int boardy = 50;
+int tileSize = 30;
 
 void setup_terminal();
 char get_char_input(std::string prompt);
@@ -39,6 +41,10 @@ void update_board_info(sf::Event event, int x, int y);
 bool play_againUI();
 void draw_tile(int x, int y, int data);
 void displayUI(int** board);
+void println(std::string s)
+{
+    std::cout << s << std::endl;
+}
 
 // TODO run game
 int main()
@@ -48,24 +54,32 @@ int main()
     bool playing = true;
     while (playing)
     {
+        std::cout << "playing again!\n";
         choose_difficultyUI();
+        window.display();
         create_board();
         int x = 0;
         int y = 0;
 
         displayUI(display_board);
         sf::Event event;
-        while ((FIRST_MOVE || !calculate_win()) && window2.isOpen())
+        while (window.isOpen())
         {
-            while (window.pollEvent(event))
+            while ((FIRST_MOVE || !calculate_win()) && window.pollEvent(event))
             {
                 sf::Vector2i pos = sf::Mouse::getPosition(window);
                 update_board_info(event, pos.x, pos.y);
             }
-            displayUI(display_board);
+            if (!game_running)
+            {
+                reset_board();
+                playing = play_againUI();
+                break;
+            }
+
         }
-        reset_board();
-        playing = play_againUI();
+
+
     }
 }
 
@@ -457,8 +471,8 @@ bool mine(int x, int y)
 {
     if (FIRST_MOVE)
     {
-        PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
         generate_board(x, y);
+        PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
         FIRST_MOVE = false;
     }
     if (display_board[x][y] == 0)
@@ -522,6 +536,7 @@ bool calculate_win()
             {
                 PlaySound(L"losingsound.wav", NULL, SND_ASYNC);
                 std::cout << "Kaboom!! You lose." << std::endl;
+                game_running = false;
                 return true;
             }
         }
@@ -541,6 +556,7 @@ bool calculate_win()
     }
     PlaySound(L"winningmusic.wav", NULL, SND_ASYNC);
     std::cout << "Congratuhelatiionsz!!! You win!" << std::endl;
+    game_running = false;
     return true;
 }
 
@@ -558,9 +574,10 @@ void reset_board()
     nums_board = NULL;
     delete[] display_board;
     display_board = NULL;
+    FIRST_MOVE = true;
+    game_running = true;
+    window.clear();
 }
-
-
 
 void choose_difficultyUI()
 {
@@ -718,17 +735,17 @@ void choose_difficultyUI()
                 {
                     return choose_difficultyUI();
                 }
-                window.close();
                 return;
             }
         }
     }
 }
 
-void draw_tile(int x, int y, int ch)
+void draw_tile(int x, int y, int numCode)
 {
     sf::Font font;
-    font.loadFromFile("ArialCE.ttf");
+    font.loadFromFile("calibri.ttf");
+    char out = display_map(numCode);
 
     int xPosition = x * tileSize + boardx;
     int yPosition = y * tileSize + boardy;
@@ -737,27 +754,29 @@ void draw_tile(int x, int y, int ch)
     tile.setOutlineColor(sf::Color::Green);
     tile.setOutlineThickness(2);
     tile.setPosition(xPosition, yPosition);
-    window2.draw(tile);
+    window.draw(tile);
 
+    std::string s(1, out);
     sf::Text num;
     num.setFont(font);
-    num.setString("" + ch);
+    num.setString(s);
     num.setFillColor(sf::Color::Black);
     num.setPosition(xPosition, yPosition);
-    num.setCharacterSize(tileSize);
-    window2.draw(num);
+    num.setCharacterSize(tileSize/2);
+    window.draw(num);
 }
 
 void displayUI(int** board)
 {
-    for (int i = 0; i < COLS; i++)
+    window.clear(sf::Color::White);
+    for (int i = 0; i < ROWS; i++)
     {
-        for (int j = 0; j < ROWS; j++)
+        for (int j = 0; j < COLS; j++)
         {
             draw_tile(j, i, board[i][j]);
         }
     }
-    window2.display();
+    window.display();
 
 }
 
@@ -765,23 +784,29 @@ void displayUI(int** board)
 void update_board_info(sf::Event event, int x, int y)
 {
     int tilex = (x - boardx) / tileSize;
-    int tiley = (x - boardy) / tileSize;
+    int tiley = (y - boardy) / tileSize;
     if (event.type == sf::Event::Closed)
     {
-        window2.close();
+        window.close();
     }
     else if (event.type == sf::Event::MouseButtonPressed)
     {
-        if (x >= boardx && x <= tilex <= COLS &&
-            y >= boardy && y <= tiley <= ROWS)
+        std::cout << tilex << ", " << tiley << std::endl;
+        if (x >= boardx && tilex < COLS &&
+            y >= boardy && tiley < ROWS)
         {
             if (event.mouseButton.button == sf::Mouse::Left)
             {
-                mine(tilex, tiley);
+                std::cout << "mining" <<std::endl;
+                mine(tiley, tilex);
+                displayUI(display_board);
             }
             else if (event.mouseButton.button == sf::Mouse::Right)
             {
-                flag(tilex, tiley);
+                std::cout << "flagging" << std::endl;
+
+                flag(tiley, tilex);
+                displayUI(display_board);
             }
             
         }
@@ -857,12 +882,14 @@ bool play_againUI()
                 //clicked yes
                 if (pos.y >= 400 && pos.y <= 650)
                 {
+                    println("clicked yes");
                     window.clear();
                     return true;
                 }
                 //clicked no
                 else if (pos.y >= 600 && pos.y <= 850)
                 {
+                    println("clicked no");
                     window.close();
                     return false;
                 }
