@@ -50,7 +50,6 @@ void println(std::string s)
 // TODO run game
 int main()
 {
-    flag.loadf
     std::ios_base::sync_with_stdio(false);
     bool playing = true;
     while (playing)
@@ -487,10 +486,7 @@ void draw_tile(int x, int y, int numCode)
     std::string s(1, out);
     sf::Text num;
     num.setFont(font);
-    num.setString(s);
-    num.setFillColor(sf::Color::Black);
-    num.setPosition(xPosition + tileSize/3, yPosition + tileSize/7);
-    num.setCharacterSize(tileSize/2);
+    text_Formatter(num, s, sf::Color::Black, xPosition + tileSize / 3, yPosition + tileSize / 7, tileSize / 2);
     window.draw(num);
 }
 
@@ -553,41 +549,33 @@ void update_board_info(sf::Event event, int x, int y)
 //asks user to play again, creating 2 buttons; if yes, return true; if no, close window, return false
 bool play_againUI()
 {
+    int hovered = 0;
     sf::Font font;
-    font.loadFromFile("ArialCE.ttf");
+    font.loadFromFile("calibri.ttf");
 
     sf::Text Prompt;
     Prompt.setFont(font);
-    Prompt.setString("Play again?");
-    Prompt.setFillColor(sf::Color::White);
-    Prompt.setPosition(600, 100);
-    Prompt.setCharacterSize(100);
+    text_Formatter(Prompt, "Play again?", sf::Color::White, 625, 100, 100);
     window.draw(Prompt);
 
     sf::RectangleShape YesButton(sf::Vector2f(800.f, 250.f));
-    YesButton.setFillColor(sf::Color::Green);
+    YesButton.setFillColor(sf::Color::White);
     YesButton.setPosition(450.f, 300.f);
     window.draw(YesButton);
 
     sf::Text YesText;
     YesText.setFont(font);
-    YesText.setString("Yes");
-    YesText.setFillColor(sf::Color::Black);
-    YesText.setPosition(725, 360);
-    YesText.setCharacterSize(100);
+    text_Formatter(YesText, "Yes", sf::Color::Black, 775, 360, 100);
     window.draw(YesText);
 
     sf::RectangleShape NoButton(sf::Vector2f(800.f, 250.f));
-    NoButton.setFillColor(sf::Color::Red);
+    NoButton.setFillColor(sf::Color::White);
     NoButton.setPosition(450.f, 600.f);
     window.draw(NoButton);
 
     sf::Text NoText;
     NoText.setFont(font);
-    NoText.setString("No");
-    NoText.setFillColor(sf::Color::Black);
-    NoText.setPosition(750, 660);
-    NoText.setCharacterSize(100);
+    text_Formatter(NoText, "No", sf::Color::Black, 795, 660, 100);
     window.draw(NoText);
 
     window.display();
@@ -598,6 +586,8 @@ bool play_againUI()
     {
         while (window.pollEvent(event))
         {
+            sf::Vector2i pos = sf::Mouse::getPosition(window);
+
             //window closed
             if (event.type == sf::Event::Closed)
             {
@@ -607,21 +597,57 @@ bool play_againUI()
             //left click pressed, test for position and button press
             else if (event.type == sf::Event::MouseButtonPressed)
             {
-                sf::Vector2i pos = sf::Mouse::getPosition(window);
                 //clicked yes
-                if (pos.y >= 300 && pos.y <= 550)
+                if (pos.y >= 300 && pos.y <= 550 && pos.x > 450 && pos.x < 1250)
                 {
                     println("clicked yes");
                     window.clear(background);
                     return true;
                 }
                 //clicked no
-                else if (pos.y >= 600 && pos.y <= 850)
+                else if (pos.y >= 600 && pos.y <= 850 && pos.x > 450 && pos.x < 1250)
                 {
                     println("clicked no");
                     window.close();
                     return false;
                 }
+            }
+            //highlight when hover
+            else if (event.type == sf::Event::MouseMoved)
+            {
+                if (pos.y >= 300 && pos.y <= 550 && pos.x > 450 && pos.x < 1250)
+                {
+                    if (hovered != 1)
+                    {
+                        YesButton.setFillColor(lightGreen);
+                        hovered = 1;
+                    }
+                }
+                //clicked no
+                else if (pos.y >= 600 && pos.y <= 850 && pos.x > 450 && pos.x < 1250)
+                {
+                    if (hovered != 2)
+                    {
+                        NoButton.setFillColor(lightRed);
+                        hovered = 2;
+                    }
+                }
+                else
+                {
+                    if (hovered != 0)
+                    {
+                        YesButton.setFillColor(sf::Color::White);
+                        NoButton.setFillColor(sf::Color::White);
+                        hovered = 0;
+                    }
+                }
+                window.clear(background);
+                window.draw(Prompt);
+                window.draw(YesButton);
+                window.draw(NoButton);
+                window.draw(NoText);
+                window.draw(YesText);
+                window.display();
             }
         }
     }
