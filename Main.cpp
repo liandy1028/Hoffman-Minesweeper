@@ -16,22 +16,16 @@ int** display_board = NULL;
 
 bool game_running = true;
 
-sf::RenderWindow window(sf::VideoMode(1980, 1080), "Minesweeper");
+sf::RenderWindow window(sf::VideoMode(1712, 963), "Minesweeper");
 
 int boardx = 50;
 int boardy = 50;
 int tileSize = 30;
 
-void setup_terminal();
-char get_char_input(std::string prompt);
-void choose_difficulty();
+
 void create_board();
 void generate_board(int x, int y);
-void display(int** board, int x, int y);
 char display_map(int x);
-std::string display_map_with_colors(int x);
-void make_move(int& x, int& y);
-void make_move_unbuffered(int& x, int& y);
 bool mine(int x, int y);
 bool flag(int x, int y);
 bool calculate_win();
@@ -49,7 +43,6 @@ void println(std::string s)
 // TODO run game
 int main()
 {
-    setup_terminal();
     std::ios_base::sync_with_stdio(false);
     bool playing = true;
     while (playing)
@@ -63,80 +56,22 @@ int main()
 
         displayUI(display_board);
         sf::Event event;
-        while (window.isOpen())
+        while (window.isOpen() && game_running)
         {
             while ((FIRST_MOVE || !calculate_win()) && window.pollEvent(event))
             {
                 sf::Vector2i pos = sf::Mouse::getPosition(window);
                 update_board_info(event, pos.x, pos.y);
             }
-            if (!game_running)
-            {
-                reset_board();
-                playing = play_againUI();
-                break;
-            }
-
         }
+        reset_board();
+        playing = play_againUI();
 
 
     }
 }
 
-void setup_terminal()
-{
-    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-    DWORD mode = 0;
-    GetConsoleMode(h, &mode);
-    SetConsoleMode(h, mode | 0x0004);
-}
 
-char get_char_input(std::string prompt)
-{
-    while (true)
-    {
-        std::string input;
-        std::getline(std::cin, input);
-        if (input.length() != 1)
-        {
-            std::cout << prompt;
-            continue;
-        }
-        return input[0];
-    }
-}
-
-void choose_difficulty()
-{
-    bool gotten_input = false;
-    std::cout << "Please select your difficulty (e:easy, m:medium, h:hard): ";
-    while (!gotten_input)
-    {
-        char difficulty = get_char_input("Invalid difficulty, please enter e, m, or h: ");
-        gotten_input = true;
-        switch (difficulty)
-        {
-        case 'e':
-            ROWS = 9;
-            COLS = 9;
-            MINES = 10;
-            break;
-        case 'm':
-            ROWS = 16;
-            COLS = 16;
-            MINES = 40;
-            break;
-        case 'h':
-            ROWS = 16;
-            COLS = 30;
-            MINES = 99;
-            break;
-        default:
-            gotten_input = false;
-            std::cout << "Invalid difficulty, please enter e, m, or h: ";
-        }
-    }
-}
 
 void create_board()
 {
@@ -215,51 +150,6 @@ void generate_board(int x, int y)
     }
 }
 
-void display(int** board, int x, int y)
-{
-    std::string display_txt;
-    display_txt += "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-
-    display_txt += '|';
-    for (int i = 0; i < COLS; i++)
-    {
-        display_txt += "--";
-    }
-    display_txt += "-|";
-    display_txt += '\n';
-    for (int i = 0; i < ROWS; i++)
-    {
-        display_txt += '|';
-        for (int j = 0; j < COLS; j++)
-        {
-            if (x == i && y == j)
-            {
-                display_txt += '(' + display_map_with_colors(board[i][j]) + ')';
-                continue;
-            }
-            if (x != i || y + 1 != j)
-            {
-                display_txt += ' ';
-            }
-            display_txt += display_map_with_colors(board[i][j]);
-        }
-        if (x != i || y + 1 != COLS)
-        {
-            display_txt += ' ';
-        }
-        display_txt += '|';
-        display_txt += '\n';
-    }
-    display_txt += '|';
-    for (int i = 0; i < COLS; i++)
-    {
-        display_txt += "--";
-    }
-    display_txt += "-|";
-    display_txt += '\n';
-    std::cout << display_txt;
-}
-
 char display_map(int x)
 {
     if (x >= 1 && x <= 8)
@@ -283,188 +173,6 @@ char display_map(int x)
         return '*';
     }
     return 'O';
-}
-
-std::string display_map_with_colors(int x)
-{
-    switch (x)
-    {
-    case 0:
-        return "\x1B[42m\x1B[30m.\033[0m";
-    case 1:
-        return "\x1B[34m1\033[0m";
-    case 2:
-        return "\x1B[32m2\033[0m";
-    case 3:
-        return "\x1B[31m3\033[0m";
-    case 4:
-        return "\x1B[36m4\033[0m";
-    case 5:
-        return "\x1B[33m5\033[0m";
-    case 6:
-        return "\x1B[35m6\033[0m";
-    case 7:
-        return "\x1B[36m7\033[0m";
-    case 8:
-        return "\x1B[30m8\033[0m";
-    case 9:
-        return " ";
-    case 10:
-        return "\x1B[41m\x1B[33m^\033[0m";
-    case -1:
-        return "\x1B[31m*\033[0m";
-    default:
-        return "\x1B[47mO\033[0m";
-    }
-}
-
-void make_move(int& x, int& y)
-{
-    bool made_move = false;
-    while (!made_move)
-    {
-        char move = get_char_input("Invalid move, please enter w, a, s, d, m, or f: ");
-        made_move = true;
-        switch (move)
-        {
-        case 'w':
-            if (x > 0)
-            {
-                x -= 1;
-            }
-            else
-            {
-                std::cout << "Cannot move up. Please enter another move: ";
-                made_move = false;
-            }
-            break;
-        case 'a':
-            if (y > 0)
-            {
-                y -= 1;
-            }
-            else
-            {
-                std::cout << "Cannot move left. Please enter another move: ";
-                made_move = false;
-            }
-            break;
-        case 's':
-            if (x < ROWS - 1)
-            {
-                x += 1;
-            }
-            else
-            {
-                std::cout << "Cannot move down. Please enter another move: ";
-                made_move = false;
-            }
-            break;
-        case 'd':
-            if (y < COLS - 1)
-            {
-                y += 1;
-            }
-            else
-            {
-                std::cout << "Cannot move right. Please enter another move: ";
-                made_move = false;
-            }
-            break;
-        case 'm':
-            if (mine(x, y))
-            {
-                std::cout << "Cannot mine this square. Please enter another move: ";
-                made_move = false;
-            }
-            break;
-        case 'k':
-        case 'f':
-            if (flag(x, y))
-            {
-                std::cout << "Cannot flag this square. Please enter another move: ";
-                made_move = false;
-            }
-            break;
-        default:
-            std::cout << "Invalid move, please enter w, a, s, d, m, or f: ";
-            made_move = false;
-        }
-    }
-}
-
-void make_move_unbuffered(int& x, int& y)
-{
-    bool made_move = false;
-    while (!made_move)
-    {
-        char move = _getch();
-        made_move = true;
-        switch (move)
-        {
-        case 'w':
-            if (x > 0)
-            {
-                x -= 1;
-            }
-            else
-            {
-                std::cout << "Cannot move up" << std::endl;
-                made_move = false;
-            }
-            break;
-        case 'a':
-            if (y > 0)
-            {
-                y -= 1;
-            }
-            else
-            {
-                std::cout << "Cannot move left." << std::endl;;
-                made_move = false;
-            }
-            break;
-        case 's':
-            if (x < ROWS - 1)
-            {
-                x += 1;
-            }
-            else
-            {
-                std::cout << "Cannot move down." << std::endl;
-                made_move = false;
-            }
-            break;
-        case 'd':
-            if (y < COLS - 1)
-            {
-                y += 1;
-            }
-            else
-            {
-                std::cout << "Cannot move right." << std::endl;
-                made_move = false;
-            }
-            break;
-        case 'm':
-            if (mine(x, y))
-            {
-                std::cout << "Cannot mine this square." << std::endl;
-                made_move = false;
-            }
-            break;
-        case 'k':
-        case 'f':
-            if (flag(x, y))
-            {
-                std::cout << "Cannot flag this square." << std::endl;
-                made_move = false;
-            }
-            break;
-        default:
-            made_move = false;
-        }
-    }
 }
 
 bool mine(int x, int y)
@@ -579,52 +287,61 @@ void reset_board()
     window.clear();
 }
 
+
 void choose_difficultyUI()
 {
     int currButton = 0;
     sf::Font font;
     font.loadFromFile("ArialCE.ttf");
 
-    sf::RectangleShape EasyButton(sf::Vector2f(800.f, 250.f));
+    sf::Text welcome;
+    welcome.setFont(font);
+    welcome.setString("Welcome to Minesweeper");
+    welcome.setFillColor(sf::Color::White);
+    welcome.setPosition(300, 100);
+    welcome.setCharacterSize(100);
+    window.draw(welcome);
+
+    sf::RectangleShape EasyButton(sf::Vector2f(600.f, 150.f));
     EasyButton.setOutlineColor(sf::Color::Green);
     EasyButton.setOutlineThickness(2);
-    EasyButton.setPosition(100.f, 100.f);
+    EasyButton.setPosition(530.f, 300.f);
     window.draw(EasyButton);
 
     sf::Text EasyText;
     EasyText.setFont(font);
     EasyText.setString("Easy");
     EasyText.setFillColor(sf::Color::Black);
-    EasyText.setPosition(390, 170);
-    EasyText.setCharacterSize(100);
+    EasyText.setPosition(765, 340);
+    EasyText.setCharacterSize(60);
     window.draw(EasyText);
 
-    sf::RectangleShape MediumButton(sf::Vector2f(800.f, 250.f));
+    sf::RectangleShape MediumButton(sf::Vector2f(600.f, 150.f));
     MediumButton.setOutlineColor(sf::Color::Yellow);
     MediumButton.setOutlineThickness(2);
-    MediumButton.setPosition(100.f, 400.f);
+    MediumButton.setPosition(530.f, 500.f);
     window.draw(MediumButton);
 
     sf::Text MediumText;
     MediumText.setFont(font);
     MediumText.setString("Medium");
     MediumText.setFillColor(sf::Color::Black);
-    MediumText.setPosition(340, 470);
-    MediumText.setCharacterSize(100);
+    MediumText.setPosition(725, 540);
+    MediumText.setCharacterSize(60);
     window.draw(MediumText);
 
-    sf::RectangleShape HardButton(sf::Vector2f(800.f, 250.f));
+    sf::RectangleShape HardButton(sf::Vector2f(600.f, 150.f));
     HardButton.setOutlineColor(sf::Color::Red);
     HardButton.setOutlineThickness(2);
-    HardButton.setPosition(100.f, 700.f);
+    HardButton.setPosition(530.f, 700.f);
     window.draw(HardButton);
 
     sf::Text HardText;
     HardText.setFont(font);
     HardText.setString("Hard");
     HardText.setFillColor(sf::Color::Black);
-    HardText.setPosition(390, 770);
-    HardText.setCharacterSize(100);
+    HardText.setPosition(765, 740);
+    HardText.setCharacterSize(60);
     window.draw(HardText);
 
     window.display();
@@ -639,7 +356,26 @@ void choose_difficultyUI()
             else if (event.type == sf::Event::MouseMoved)
             {
                 sf::Vector2i pos = sf::Mouse::getPosition(window);
-                if (pos.y > 100 && pos.y <= 350)
+                if (pos.x < 530 || pos.x > 1130) 
+                {
+                    if (currButton != 0)
+                    {
+                        EasyButton.setFillColor(sf::Color::White);
+                        MediumButton.setFillColor(sf::Color::White);
+                        HardButton.setFillColor(sf::Color::White);
+                        currButton = 0;
+                        window.clear();
+                        window.draw(EasyButton);
+                        window.draw(MediumButton);
+                        window.draw(HardButton);
+                        window.draw(EasyText);
+                        window.draw(MediumText);
+                        window.draw(HardText);
+                        window.draw(welcome);
+                        window.display();
+                    }
+                }
+                else if (pos.y > 300 && pos.y <= 450)
                 {
                     if (currButton != 1)
                     {
@@ -652,10 +388,11 @@ void choose_difficultyUI()
                         window.draw(EasyText);
                         window.draw(MediumText);
                         window.draw(HardText);
+                        window.draw(welcome);
                         window.display();
                     }
                 }
-                else if (pos.y > 400 && pos.y <= 650)
+                else if (pos.y > 500 && pos.y <= 650)
                 {
                     if (currButton != 2)
                     {
@@ -668,10 +405,11 @@ void choose_difficultyUI()
                         window.draw(EasyText);
                         window.draw(MediumText);
                         window.draw(HardText);
+                        window.draw(welcome);
                         window.display();
                     }
                 }
-                else if (pos.y > 700 && pos.y <= 950)
+                else if (pos.y > 700 && pos.y <= 850)
                 {
                     if (currButton != 3)
                     {
@@ -684,6 +422,7 @@ void choose_difficultyUI()
                         window.draw(EasyText);
                         window.draw(MediumText);
                         window.draw(HardText);
+                        window.draw(welcome);
                         window.display();
                     }
                 }
@@ -702,6 +441,7 @@ void choose_difficultyUI()
                         window.draw(EasyText);
                         window.draw(MediumText);
                         window.draw(HardText);
+                        window.draw(welcome);
                         window.display();
                     }
 
@@ -710,12 +450,18 @@ void choose_difficultyUI()
             else if (event.type == sf::Event::MouseButtonPressed)
             {
                 sf::Vector2i pos = sf::Mouse::getPosition(window);
-                if (pos.y > 100 && pos.y <= 350)
+                
+                if (pos.x < 550 || pos.x > 1150)
+                {
+                    return choose_difficultyUI();
+                }
+                else if (pos.y > 100 && pos.y <= 350)
                 {
                     std::cout << "Easy\n";
                     ROWS = 9;
                     COLS = 9;
                     MINES = 10;
+                    tileSize = 800 / 9;
                 }
                 else if (pos.y > 400 && pos.y <= 650)
                 {
@@ -723,6 +469,7 @@ void choose_difficultyUI()
                     ROWS = 16;
                     COLS = 16;
                     MINES = 40;
+                    tileSize = 800 / 16;
                 }
                 else if (pos.y > 700 && pos.y <= 950)
                 {
@@ -730,6 +477,7 @@ void choose_difficultyUI()
                     ROWS = 16;
                     COLS = 30;
                     MINES = 99;
+                    tileSize = 963 / 30;
                 }
                 else
                 {
@@ -817,6 +565,7 @@ void update_board_info(sf::Event event, int x, int y)
             y >= boardy && y <= tiley <= ROWS)
         {
             flag(tilex, tiley);
+            displayUI(display_board);
         }
     }
 }
@@ -831,34 +580,34 @@ bool play_againUI()
     Prompt.setFont(font);
     Prompt.setString("Play again?");
     Prompt.setFillColor(sf::Color::White);
-    Prompt.setPosition(50, 200);
-    Prompt.setCharacterSize(50);
+    Prompt.setPosition(700, 200);
+    Prompt.setCharacterSize(100);
     window.draw(Prompt);
 
     sf::RectangleShape YesButton(sf::Vector2f(800.f, 250.f));
     YesButton.setFillColor(sf::Color::Green);
-    YesButton.setPosition(50.f, 300.f);
+    YesButton.setPosition(450.f, 300.f);
     window.draw(YesButton);
 
     sf::Text YesText;
     YesText.setFont(font);
     YesText.setString("Yes");
     YesText.setFillColor(sf::Color::Black);
-    YesText.setPosition(50, 300);
-    YesText.setCharacterSize(50);
+    YesText.setPosition(800, 360);
+    YesText.setCharacterSize(100);
     window.draw(YesText);
 
     sf::RectangleShape NoButton(sf::Vector2f(800.f, 250.f));
     NoButton.setFillColor(sf::Color::Red);
-    NoButton.setPosition(50.f, 600.f);
+    NoButton.setPosition(450.f, 600.f);
     window.draw(NoButton);
 
     sf::Text NoText;
     NoText.setFont(font);
     NoText.setString("No");
     NoText.setFillColor(sf::Color::Black);
-    NoText.setPosition(50, 600);
-    NoText.setCharacterSize(50);
+    NoText.setPosition(850, 660);
+    NoText.setCharacterSize(100);
     window.draw(NoText);
 
     window.display();
@@ -880,7 +629,7 @@ bool play_againUI()
             {
                 sf::Vector2i pos = sf::Mouse::getPosition(window);
                 //clicked yes
-                if (pos.y >= 400 && pos.y <= 650)
+                if (pos.y >= 300 && pos.y <= 550)
                 {
                     println("clicked yes");
                     window.clear();
