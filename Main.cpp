@@ -201,7 +201,6 @@ bool mine(int x, int y)
 {
     if (FIRST_MOVE)
     {
-        PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
         generate_board(x, y);
         FIRST_MOVE = false;
     }
@@ -209,7 +208,6 @@ bool mine(int x, int y)
     {
         if (nums_board[x][y] == 0)
         {
-            PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
             display_board[x][y] = 9;
             for (int dx = -1; dx <= 1; dx++)
             {
@@ -221,7 +219,6 @@ bool mine(int x, int y)
                         {
                             if (display_board[x + dx][y + dy] == 0)
                             {
-                                PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
                                 mine(x + dx, y + dy);
                             }
                         }
@@ -231,7 +228,6 @@ bool mine(int x, int y)
         }
         else
         {
-            PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
             display_board[x][y] = nums_board[x][y];
         }
         return false;
@@ -524,7 +520,7 @@ void update_board_info(sf::Event event, int x, int y)
         {
             if (event.mouseButton.button == sf::Mouse::Left)
             {
-                std::cout << "mining" << std::endl;
+                PlaySound(L"miningsound.wav", NULL, SND_ASYNC);
                 mine(tiley, tilex);
                 displayUI(display_board);
             }
