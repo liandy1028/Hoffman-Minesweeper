@@ -17,6 +17,11 @@ int** display_board = NULL;
 bool game_running = true;
 
 sf::RenderWindow window(sf::VideoMode(1712, 963), "Minesweeper");
+sf::Color background(139, 190, 255);
+sf::Color lightGreen(51, 255, 44);
+sf::Color lightRed(255, 67, 67);
+sf::Color lightYellow(224, 255, 65);
+
 
 int boardx = 50;
 int boardy = 50;
@@ -26,6 +31,7 @@ int tileSize = 30;
 void create_board();
 void generate_board(int x, int y);
 char display_map(int x);
+sf::Color display_map_colored();
 bool mine(int x, int y);
 bool flag(int x, int y);
 bool calculate_win();
@@ -35,6 +41,7 @@ void update_board_info(sf::Event event, int x, int y);
 bool play_againUI();
 void draw_tile(int x, int y, int data);
 void displayUI(int** board);
+void text_Formatter(sf::Text& text, std::string str, sf::Color color, float x, float y, int char_size);
 void println(std::string s)
 {
     std::cout << s << std::endl;
@@ -43,11 +50,12 @@ void println(std::string s)
 // TODO run game
 int main()
 {
+    flag.loadf
     std::ios_base::sync_with_stdio(false);
     bool playing = true;
     while (playing)
     {
-        std::cout << "playing again!\n";
+        window.setPosition(sf::Vector2i(0, 0));
         choose_difficultyUI();
         window.display();
         create_board();
@@ -156,11 +164,7 @@ char display_map(int x)
     {
         return '0' + x;
     }
-    if (x == 0)
-    {
-        return '.';
-    }
-    if (x == 9)
+    if (x == 9 || x == 0)
     {
         return ' ';
     }
@@ -173,6 +177,24 @@ char display_map(int x)
         return '*';
     }
     return 'O';
+}
+
+sf::Color display_map_colored(int x)
+{
+    if (x == 0)
+    {
+        return sf::Color::Green;
+    }
+    else if (x == 9)
+    {
+        sf::Color brown(210, 105, 30);
+        return brown;
+    }
+    else if (x == 10)
+    {
+        return sf::Color::Red;
+    }
+    return sf::Color::White;
 }
 
 bool mine(int x, int y)
@@ -284,9 +306,16 @@ void reset_board()
     display_board = NULL;
     FIRST_MOVE = true;
     game_running = true;
-    window.clear();
+    window.clear(background);
 }
 
+void text_Formatter(sf::Text& text, std::string str, sf::Color color, float x, float y, int char_size)
+{
+    text.setString(str);
+    text.setFillColor(color);
+    text.setPosition(x, y);
+    text.setCharacterSize(char_size);
+}
 
 void choose_difficultyUI()
 {
@@ -296,52 +325,34 @@ void choose_difficultyUI()
 
     sf::Text welcome;
     welcome.setFont(font);
-    welcome.setString("Welcome to Minesweeper");
-    welcome.setFillColor(sf::Color::White);
-    welcome.setPosition(300, 100);
-    welcome.setCharacterSize(100);
+    text_Formatter(welcome, "Welcome to Minesweeper", sf::Color::White, 300, 100, 100);
     window.draw(welcome);
 
     sf::RectangleShape EasyButton(sf::Vector2f(600.f, 150.f));
-    EasyButton.setOutlineColor(sf::Color::Green);
-    EasyButton.setOutlineThickness(2);
     EasyButton.setPosition(530.f, 300.f);
     window.draw(EasyButton);
 
     sf::Text EasyText;
     EasyText.setFont(font);
-    EasyText.setString("Easy");
-    EasyText.setFillColor(sf::Color::Black);
-    EasyText.setPosition(765, 340);
-    EasyText.setCharacterSize(60);
+    text_Formatter(EasyText, "Easy", sf::Color::Black, 765, 340, 60);
     window.draw(EasyText);
 
     sf::RectangleShape MediumButton(sf::Vector2f(600.f, 150.f));
-    MediumButton.setOutlineColor(sf::Color::Yellow);
-    MediumButton.setOutlineThickness(2);
     MediumButton.setPosition(530.f, 500.f);
     window.draw(MediumButton);
 
     sf::Text MediumText;
     MediumText.setFont(font);
-    MediumText.setString("Medium");
-    MediumText.setFillColor(sf::Color::Black);
-    MediumText.setPosition(725, 540);
-    MediumText.setCharacterSize(60);
+    text_Formatter(MediumText, "Medium", sf::Color::Black, 725, 540, 60);
     window.draw(MediumText);
 
     sf::RectangleShape HardButton(sf::Vector2f(600.f, 150.f));
-    HardButton.setOutlineColor(sf::Color::Red);
-    HardButton.setOutlineThickness(2);
     HardButton.setPosition(530.f, 700.f);
     window.draw(HardButton);
 
     sf::Text HardText;
     HardText.setFont(font);
-    HardText.setString("Hard");
-    HardText.setFillColor(sf::Color::Black);
-    HardText.setPosition(765, 740);
-    HardText.setCharacterSize(60);
+    text_Formatter(HardText, "Hard", sf::Color::Black, 765, 740, 60);
     window.draw(HardText);
 
     window.display();
@@ -351,11 +362,12 @@ void choose_difficultyUI()
     {
         while (window.pollEvent(event))
         {
+            sf::Vector2i pos = sf::Mouse::getPosition(window);
+
             if (event.type == sf::Event::Closed)
                 window.close();
             else if (event.type == sf::Event::MouseMoved)
             {
-                sf::Vector2i pos = sf::Mouse::getPosition(window);
                 if (pos.x < 530 || pos.x > 1130) 
                 {
                     if (currButton != 0)
@@ -364,66 +376,30 @@ void choose_difficultyUI()
                         MediumButton.setFillColor(sf::Color::White);
                         HardButton.setFillColor(sf::Color::White);
                         currButton = 0;
-                        window.clear();
-                        window.draw(EasyButton);
-                        window.draw(MediumButton);
-                        window.draw(HardButton);
-                        window.draw(EasyText);
-                        window.draw(MediumText);
-                        window.draw(HardText);
-                        window.draw(welcome);
-                        window.display();
                     }
                 }
                 else if (pos.y > 300 && pos.y <= 450)
                 {
                     if (currButton != 1)
                     {
-                        EasyButton.setFillColor(sf::Color::Green);
+                        EasyButton.setFillColor(lightGreen);
                         currButton = 1;
-                        window.clear();
-                        window.draw(EasyButton);
-                        window.draw(MediumButton);
-                        window.draw(HardButton);
-                        window.draw(EasyText);
-                        window.draw(MediumText);
-                        window.draw(HardText);
-                        window.draw(welcome);
-                        window.display();
                     }
                 }
                 else if (pos.y > 500 && pos.y <= 650)
                 {
                     if (currButton != 2)
                     {
-                        MediumButton.setFillColor(sf::Color::Yellow);
+                        MediumButton.setFillColor(lightYellow);
                         currButton = 2;
-                        window.clear();
-                        window.draw(EasyButton);
-                        window.draw(MediumButton);
-                        window.draw(HardButton);
-                        window.draw(EasyText);
-                        window.draw(MediumText);
-                        window.draw(HardText);
-                        window.draw(welcome);
-                        window.display();
                     }
                 }
                 else if (pos.y > 700 && pos.y <= 850)
                 {
                     if (currButton != 3)
                     {
-                        HardButton.setFillColor(sf::Color::Red);
+                        HardButton.setFillColor(lightRed);
                         currButton = 3;
-                        window.clear();
-                        window.draw(EasyButton);
-                        window.draw(MediumButton);
-                        window.draw(HardButton);
-                        window.draw(EasyText);
-                        window.draw(MediumText);
-                        window.draw(HardText);
-                        window.draw(welcome);
-                        window.display();
                     }
                 }
                 else
@@ -434,28 +410,26 @@ void choose_difficultyUI()
                         MediumButton.setFillColor(sf::Color::White);
                         HardButton.setFillColor(sf::Color::White);
                         currButton = 0;
-                        window.clear();
-                        window.draw(EasyButton);
-                        window.draw(MediumButton);
-                        window.draw(HardButton);
-                        window.draw(EasyText);
-                        window.draw(MediumText);
-                        window.draw(HardText);
-                        window.draw(welcome);
-                        window.display();
                     }
 
                 }
+                window.clear(background);
+                window.draw(EasyButton);
+                window.draw(MediumButton);
+                window.draw(HardButton);
+                window.draw(EasyText);
+                window.draw(MediumText);
+                window.draw(HardText);
+                window.draw(welcome);
+                window.display();
             }
             else if (event.type == sf::Event::MouseButtonPressed)
-            {
-                sf::Vector2i pos = sf::Mouse::getPosition(window);
-                
+            {                
                 if (pos.x < 550 || pos.x > 1150)
                 {
                     return choose_difficultyUI();
                 }
-                else if (pos.y > 100 && pos.y <= 350)
+                else if (pos.y > 300 && pos.y <= 450)
                 {
                     std::cout << "Easy\n";
                     ROWS = 9;
@@ -463,7 +437,7 @@ void choose_difficultyUI()
                     MINES = 10;
                     tileSize = 800 / 9;
                 }
-                else if (pos.y > 400 && pos.y <= 650)
+                else if (pos.y > 500 && pos.y <= 650)
                 {
                     std::cout << "Medium\n";
                     ROWS = 16;
@@ -471,13 +445,13 @@ void choose_difficultyUI()
                     MINES = 40;
                     tileSize = 800 / 16;
                 }
-                else if (pos.y > 700 && pos.y <= 950)
+                else if (pos.y > 700 && pos.y <= 850)
                 {
                     std::cout << "Hard\n";
                     ROWS = 16;
                     COLS = 30;
                     MINES = 99;
-                    tileSize = 963 / 30;
+                    tileSize = 1600 / 30;
                 }
                 else
                 {
@@ -494,13 +468,19 @@ void draw_tile(int x, int y, int numCode)
     sf::Font font;
     font.loadFromFile("calibri.ttf");
     char out = display_map(numCode);
+    sf::Color tileCol = display_map_colored(numCode);
+    if ((x + y) % 2 == 0)
+    {
+        tileCol.a -= 30;
+    }
 
     int xPosition = x * tileSize + boardx;
     int yPosition = y * tileSize + boardy;
 
     sf::RectangleShape tile(sf::Vector2f(tileSize, tileSize));
-    tile.setOutlineColor(sf::Color::Green);
+    tile.setOutlineColor(sf::Color::Black);
     tile.setOutlineThickness(2);
+    tile.setFillColor(tileCol);
     tile.setPosition(xPosition, yPosition);
     window.draw(tile);
 
@@ -509,14 +489,14 @@ void draw_tile(int x, int y, int numCode)
     num.setFont(font);
     num.setString(s);
     num.setFillColor(sf::Color::Black);
-    num.setPosition(xPosition, yPosition);
+    num.setPosition(xPosition + tileSize/3, yPosition + tileSize/7);
     num.setCharacterSize(tileSize/2);
     window.draw(num);
 }
 
 void displayUI(int** board)
 {
-    window.clear(sf::Color::White);
+    window.clear(background);
     for (int i = 0; i < ROWS; i++)
     {
         for (int j = 0; j < COLS; j++)
@@ -564,7 +544,7 @@ void update_board_info(sf::Event event, int x, int y)
         if (x >= boardx && x <= tilex <= COLS &&
             y >= boardy && y <= tiley <= ROWS)
         {
-            flag(tilex, tiley);
+            flag(tiley, tilex);
             displayUI(display_board);
         }
     }
@@ -580,7 +560,7 @@ bool play_againUI()
     Prompt.setFont(font);
     Prompt.setString("Play again?");
     Prompt.setFillColor(sf::Color::White);
-    Prompt.setPosition(700, 200);
+    Prompt.setPosition(600, 100);
     Prompt.setCharacterSize(100);
     window.draw(Prompt);
 
@@ -593,7 +573,7 @@ bool play_againUI()
     YesText.setFont(font);
     YesText.setString("Yes");
     YesText.setFillColor(sf::Color::Black);
-    YesText.setPosition(800, 360);
+    YesText.setPosition(725, 360);
     YesText.setCharacterSize(100);
     window.draw(YesText);
 
@@ -606,7 +586,7 @@ bool play_againUI()
     NoText.setFont(font);
     NoText.setString("No");
     NoText.setFillColor(sf::Color::Black);
-    NoText.setPosition(850, 660);
+    NoText.setPosition(750, 660);
     NoText.setCharacterSize(100);
     window.draw(NoText);
 
@@ -632,7 +612,7 @@ bool play_againUI()
                 if (pos.y >= 300 && pos.y <= 550)
                 {
                     println("clicked yes");
-                    window.clear();
+                    window.clear(background);
                     return true;
                 }
                 //clicked no
